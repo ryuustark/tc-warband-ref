@@ -707,9 +707,10 @@ function renderHeader() {
 function renderWarnings() {
   const seen = new Set();
   const alerts = [];
-  WARBAND.units.forEach(u => {
+  const units = tcRoster || WARBAND.units;
+  units.forEach(u => {
     if (u.status === 'dead' || u.status === 'reserve') return;
-    u.abilities.filter(a => a.alert).forEach(a => {
+    (u.abilities || []).filter(a => a.alert).forEach(a => {
       const key = t(a.name);
       if (seen.has(key)) return;
       seen.add(key);
@@ -751,25 +752,27 @@ const typeLabel = {elite:{es:'Elite',en:'Elite'}, troop:{es:'Tropa',en:'Troop'},
 
 function renderUnits() {
   const body = document.getElementById('units-body');
+  const allUnits = tcRoster || WARBAND.units;
   let html = '';
   typeOrder.forEach(type => {
-    const units = WARBAND.units.filter(u => u.type === type && (tcOverlay[u.id]?.status || u.status) !== 'dead');
-    if (!units.length) return;
+    const filtered = allUnits.filter(u => u.type === type && u.status !== 'dead');
+    if (!filtered.length) return;
     html += `<div class="grp-hdr">${typeLabel[type].es} / ${typeLabel[type].en}</div>`;
-    units.forEach(u => { html += renderUnitCard(u); });
+    filtered.forEach(u => { html += renderUnitCard(u); });
   });
   body.innerHTML = html;
-  // attach BM pip listeners
-  WARBAND.units.forEach(u => { if (u.status !== 'dead') attachBmListeners(u.id); });
+  allUnits.forEach(u => { if (u.status !== 'dead') attachBmListeners(u.id); });
 }
 
 function renderUnitCard(u) {
-  const ov = tcOverlay[u.id] || {};
-  const effectiveStatus = ov.status || u.status;
-  const effectiveCost   = ov.cost   || u.cost;
-  const xp = ov.xp || 0;
-  const scars = ov.battleScars || 0;
-  const allInjuries = [...u.injuries, ...(ov.extraInjuries || [])];
+  // Works with both tcRoster units (flat props) and static WARBAND units (+ overlay)
+  const ov = tcRoster ? {} : (tcOverlay[u.id] || {});
+  const effectiveStatus = u.status;
+  const effectiveCost   = u.cost;
+  const xp = u.xp !== undefined ? u.xp : (ov.xp || 0);
+  const scars = u.scars || 0;
+  const allInjuries = tcRoster ? (u.injuries || []) : [...(u.injuries || []), ...(ov.extraInjuries || [])];
+  const extraAdvs = tcRoster ? (u.tcExtraAdvs || []) : (ov.extraAdvs || []);
   const bm = state.bm[u.id] || 0;
   const hasInj = allInjuries.length > 0;
   const typeCls = {elite:'t-elite',troop:'t-troop',mercenary:'t-merc',reserve:'t-reserve'}[u.type];
@@ -796,8 +799,9 @@ function renderUnitCard(u) {
     ${renderStats(u)}
     ${renderKeywords(u)}
     ${renderWeapons(u)}
-    ${renderAbilities(u, ov.extraAdvs || [])}
+    ${renderAbilities(u, extraAdvs)}
     ${renderInjuries(u, allInjuries)}
+    ${u.tcEquipment && u.tcEquipment.length ? renderTcEquipment(u.tcEquipment) : ''}
     ${renderBmCounter(u)}
     ${u.tactics ? `<div class="tactics">📋 ${t(u.tactics)}</div>` : ''}
   </div>
@@ -867,6 +871,12 @@ function renderInjuries(u, allInjuries) {
     </div>`;
   }).join('');
   return `<div class="blk-title">${lang==='en'?'Injuries':'Heridas'}</div><div class="injury-list">${html}</div>`;
+}
+
+function renderTcEquipment(items) {
+  if (!items || !items.length) return '';
+  return `<div class="blk-title">Equipment (TC Live)</div>
+  <div class="kws">${items.map(e => `<span class="kw">${e}</span>`).join('')}</div>`;
 }
 
 function renderBmCounter(u) {
@@ -963,6 +973,72 @@ const TC_API = "https://synod.trench-companion.com/wp-json/synod/v1/multi-datase
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 const tcOverlay = {};
 
+// Compendium data extracted from TC bundle (move in inches, melee/ranged in dice, armour is base)
+const TC_COMPENDIUM = {
+  md_sorcerer:                { move:'6"/Fly', melee:'+1D', ranged:'+1D', armour:'0',  type:'elite',     keywords:['The Court','Demonic','Elite','Fear','Flying','Goetic'] },
+  md_praetor:                 { move:'8"/Fly', melee:'+3D', ranged:'+3D', armour:'0',  type:'elite',     keywords:['The Court','Demonic','Elite','Leader','Fear','Flying','Tough','Strong'] },
+  md_pitlocust:               { move:'8"/Fly', melee:'+2D', ranged:'0',   armour:'0',  type:'elite',     keywords:['The Court','Demonic','Fear','Flying'] },
+  md_hunterofthelefthandpath: { move:'6"',     melee:'+1D', ranged:'+2D', armour:'0',  type:'elite',     keywords:['The Court','Demonic','Elite','Infiltrator'] },
+  md_hellknight:              { move:'6"',     melee:'+2D', ranged:'0',   armour:'0',  type:'elite',     keywords:['The Court','Demonic','Strong','Elite'] },
+  md_yokefiend:               { move:'6"',     melee:'+1D', ranged:'0',   armour:'0',  type:'troop',     keywords:['The Court','Demonic','Hateful'] },
+  md_wretched:                { move:'6"',     melee:'0',   ranged:'0',   armour:'0',  type:'troop',     keywords:['Heretic'] },
+  md_wretched_court:          { move:'6"',     melee:'0',   ranged:'0',   armour:'0',  type:'troop',     keywords:['The Court','Law of Hell'] },
+  md_goeticwarlock:           { move:'6"',     melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Demonic','Fear','Artificial','Goetic'] },
+  md_sineater:                { move:'6"',     melee:'+2D', ranged:'0',   armour:'0',  type:'mercenary', keywords:['Demonic','Fear','Tough','Strong'] },
+};
+
+// Static unit ID lookup by TC model type (single-instance models)
+const TC_MODEL_TO_ID = {
+  md_sorcerer:'sorcerer', md_praetor:'praetor', md_sineater:'sineater',
+  md_hunterofthelefthandpath:'hunter', md_hellknight:'hellknight'
+};
+
+let tcRoster = null;
+
+function buildUnitFromTc(mo, staticUnit, cmp) {
+  const status = mo.active === 'dead' ? 'dead' : mo.active === 'reserved' ? 'reserve' : 'active';
+  const type = staticUnit?.type || cmp?.type || (mo.elite ? 'elite' : 'troop');
+
+  // Injuries: map TC IDs → names + static descriptions where available
+  const injuries = (mo.list_injury || []).map(inj => {
+    const name = injuryName(inj.object_id);
+    const staticInj = staticUnit?.injuries?.find(i =>
+      (i.name.en || i.name.es).toLowerCase() === name.toLowerCase()
+    );
+    return staticInj || { name:{es:name,en:name}, effect:{es:'ver TC',en:'see TC'} };
+  });
+
+  // Advancements from TC not already in static abilities
+  const staticAblNames = new Set((staticUnit?.abilities || []).map(a => (a.name.en||a.name.es).toLowerCase()));
+  const tcExtraAdvs = (mo.list_skills || [])
+    .map(s => skillName(s.object_id))
+    .filter(n => !staticAblNames.has(n.toLowerCase()));
+
+  // Equipment names from TC API
+  const tcEquipment = (mo.equipment || []).map(e => e.equipment?.name).filter(Boolean);
+
+  return {
+    id: mo.id,
+    modelId: mo.model,
+    name: { es: mo.name, en: mo.name },
+    type,
+    status,
+    xp: mo.experience || 0,
+    move:    staticUnit?.move    || cmp?.move    || '?',
+    melee:   staticUnit?.melee   || cmp?.melee   || '?',
+    ranged:  staticUnit?.ranged  || cmp?.ranged  || '?',
+    armour:  staticUnit?.armour  || cmp?.armour  || '?',
+    keywords: staticUnit?.keywords || cmp?.keywords || [],
+    weapons:  staticUnit?.weapons  || [],
+    abilities: staticUnit?.abilities || [],
+    injuries,
+    tactics: staticUnit?.tactics,
+    cost:    staticUnit?.cost    || '?D',
+    tcEquipment,
+    tcExtraAdvs
+  };
+}
+
 function injuryName(id) {
   const map = {
     in_darkmemory:'Dark Memory', in_captured:'Captured', in_minorwound:'Minor Wound',
@@ -999,54 +1075,37 @@ async function syncFromTC() {
     if (!wbRaw) return;
     const wb = typeof wbRaw === 'string' ? JSON.parse(wbRaw) : wbRaw;
 
-    // ── Warband metadata ──────────────────────────────────────────
+    // Warband metadata
     if (wb.name) WARBAND.meta.tcName = wb.name;
     WARBAND.meta.tcStash = wb.ducat_bank ?? WARBAND.meta.stash;
     WARBAND.meta.tcGlory = wb.glory_bank ?? WARBAND.meta.glory;
-    renderHeader();
 
-    // ── Match models to WARBAND units (by name, in order) ────────
-    const seenKey = {};
-    (wb.models || []).forEach(m => {
+    // Build TC roster — each model matched to static unit for rich text
+    const modelTypeCounts = {};
+    const newRoster = (wb.models || []).map(m => {
       const mo = m.model;
-      const tcName = mo.name.toLowerCase();
-      seenKey[tcName] = seenKey[tcName] || 0;
+      const mdType = mo.model;
+      modelTypeCounts[mdType] = (modelTypeCounts[mdType] || 0) + 1;
+      const count = modelTypeCounts[mdType];
+      const cmp = TC_COMPENDIUM[mdType] || null;
 
-      const candidates = WARBAND.units.filter(u => {
-        const uName = (u.name[lang] || u.name.es || '').toLowerCase();
-        return uName.includes(tcName) || tcName.includes(uName.split(' ')[0]);
-      });
-      const unit = candidates[seenKey[tcName]];
-      seenKey[tcName]++;
-      if (!unit) return;
+      let staticUnit = null;
+      if (TC_MODEL_TO_ID[mdType]) {
+        staticUnit = WARBAND.units.find(u => u.id === TC_MODEL_TO_ID[mdType]);
+      } else if (mdType === 'md_pitlocust') {
+        staticUnit = WARBAND.units.find(u => u.id === (mo.elite ? 'pitlocust_e' : 'pitlocust_t'));
+      } else if (mdType === 'md_yokefiend') {
+        staticUnit = WARBAND.units.find(u => u.id === 'yokefiend_' + count);
+      } else if (mdType === 'md_wretched_court' || mdType === 'md_wretched') {
+        staticUnit = WARBAND.units.find(u => u.id === 'wretched_' + count);
+      }
 
-      const tcStatus = mo.active; // "active" | "reserved" | "dead"
-      const xp = mo.experience || 0;
-      const injList = [].concat(mo.list_injury || []);
-      const sklList = [].concat(mo.list_skills || []);
-
-      // Extra injuries not already in WARBAND data (match by display name)
-      const wbInjNames = new Set(unit.injuries.map(i => (i.name.en || i.name.es).toLowerCase()));
-      const extraInjuries = injList.map(inj => {
-        const name = injuryName(inj.object_id);
-        if (wbInjNames.has(name.toLowerCase())) return null;
-        return { name:{es:name, en:name}, effect:{es:'ver Trench Companion', en:'see Trench Companion'} };
-      }).filter(Boolean);
-
-      // Extra advancements not already listed as abilities
-      const wbAblNames = new Set(unit.abilities.map(a => (a.name.en || a.name.es).toLowerCase()));
-      const extraAdvs = sklList
-        .map(s => skillName(s.object_id))
-        .filter(name => !wbAblNames.has(name.toLowerCase()));
-
-      tcOverlay[unit.id] = {
-        status: tcStatus === 'dead' ? 'dead' : tcStatus === 'reserved' ? 'reserve' : 'active',
-        xp,
-        extraInjuries,
-        extraAdvs
-      };
+      return buildUnitFromTc(mo, staticUnit, cmp);
     });
 
+    tcRoster = newRoster;
+    renderHeader();
+    renderWarnings();
     renderUnits();
     document.getElementById('sync-badge').style.display = 'inline';
   } catch(e) {
