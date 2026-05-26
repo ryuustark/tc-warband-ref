@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smoking Lust — Trench Crusade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0505;--card-bg:#1a0a0a;--accent:#8b1a1a;--accent-br:#c0332a;
+  --gold:#c9a84c;--text:#d4c5a9;--dim:#8a7a65;--border:#5c1a1a;
+  --inj:#7a0000;--kw:#2a1a1a;--warn-bg:#3a1a00;--warn-border:#8b5a00;
+  --glow:0 0 8px rgba(139,26,26,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Palatino Linotype',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}
+h1,h2,h3,.gothic{font-family:'Cinzel','Palatino Linotype',Georgia,serif}
+a{color:var(--gold);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+/* HEADER */
+.hdr{background:linear-gradient(180deg,#1f0808 0%,var(--card-bg) 100%);border-bottom:2px solid var(--accent);padding:12px 14px;box-shadow:var(--glow);position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.wband-name{font-size:22px;color:var(--gold);letter-spacing:2px;text-shadow:0 0 12px rgba(201,168,76,0.5)}
+.faction-line{color:var(--dim);font-size:11px;margin-top:2px}
+.hdr-ctrl{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.btn{background:var(--card-bg);border:1px solid var(--border);color:var(--text);padding:4px 9px;font-size:11px;border-radius:2px}
+.btn:hover{border-color:var(--accent);color:var(--gold)}
+.btn-lang{font-family:'Cinzel',serif;font-weight:600}
+.hdr-stats{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.spill{background:var(--kw);border:1px solid var(--border);padding:2px 8px;border-radius:10px;font-size:11px}
+.spill strong{color:var(--gold)}
+.sync-badge{font-size:10px;color:#4caa77;margin-left:4px;display:none}
+.tc-id-row{display:flex;align-items:center;gap:5px;margin-top:5px}
+.tc-id-lbl{font-size:10px;color:var(--dim)}
+.tc-id-input{background:#110606;border:1px solid var(--border);color:var(--gold);font-family:monospace;font-size:11px;padding:2px 6px;border-radius:2px;width:72px;outline:none}
+.tc-id-input:focus{border-color:var(--accent)}
+.tc-id-btn{font-size:11px;padding:2px 7px}
+
+/* WARNING BOX */
+.warn-box{background:var(--warn-bg);border:1px solid var(--warn-border);border-left:4px solid var(--gold);margin:10px;padding:10px 12px;border-radius:2px}
+.warn-box h3{color:var(--gold);font-size:12px;margin-bottom:7px;letter-spacing:1px}
+.warn-item{display:flex;gap:8px;margin-bottom:5px;font-size:12px;line-height:1.4}
+.warn-icon{flex-shrink:0}
+
+/* COLLAPSIBLE SECTION */
+.sec{margin:10px;border:1px solid var(--border);border-radius:2px;overflow:hidden}
+.sec-hdr{background:var(--accent);padding:7px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.sec-hdr h2{font-size:13px;letter-spacing:2px;color:var(--text)}
+.chevron{transition:transform 0.2s;font-size:10px;color:var(--text)}
+.sec.collapsed .chevron{transform:rotate(-90deg)}
+.sec-body{padding:12px;display:block}
+.sec.collapsed .sec-body{display:none}
+
+/* CHECKLIST */
+.chk-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;font-size:12px}
+.chk-item input{width:15px;height:15px;flex-shrink:0;accent-color:var(--accent-br);margin-top:2px}
+.chk-item label{cursor:pointer;line-height:1.4}
+.chk-item input:checked+label{color:var(--dim);text-decoration:line-through}
+
+/* UNIT LIST */
+.grp-hdr{background:#110606;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px 12px;font-size:10px;letter-spacing:3px;color:var(--accent-br);text-transform:uppercase;font-family:'Cinzel',serif}
+.unit-card{border-bottom:1px solid var(--border);background:var(--card-bg)}
+.unit-card:last-child{border-bottom:none}
+.unit-hdr{display:flex;align-items:center;gap:7px;padding:7px 10px;cursor:pointer;user-select:none}
+.unit-hdr:hover{background:#200a0a}
+
+.tbadge{font-size:9px;padding:2px 5px;border-radius:2px;letter-spacing:1px;text-transform:uppercase;font-family:'Cinzel',serif;flex-shrink:0}
+.t-elite{background:var(--accent);color:var(--text)}
+.t-troop{background:#1a1a3a;color:#8888cc}
+.t-merc{background:#1a2a1a;color:#88cc88}
+.t-reserve{background:#2a2a1a;color:#cccc88}
+
+.uname{font-family:'Cinzel',serif;font-size:12px;flex:1;color:var(--text);line-height:1.3}
+.uname.dead{color:var(--dim);text-decoration:line-through}
+.ucost{font-size:10px;color:var(--dim);flex-shrink:0}
+.xp-badge{font-size:9px;color:#4caa77;background:#0a1a0a;border:1px solid #2a4a2a;padding:1px 5px;border-radius:8px;flex-shrink:0}
+
+.uqs{display:flex;gap:5px;font-size:10px;color:var(--dim);flex-shrink:0}
+.uq{text-align:center;min-width:28px}
+.uq-lbl{font-size:8px;color:#4a3a2a;display:block;letter-spacing:0.5px}
+
+.inj-dot{width:7px;height:7px;border-radius:50%;background:var(--inj);flex-shrink:0;display:none}
+.inj-dot.on{display:block}
+.bm-mini{font-size:11px;color:var(--gold);min-width:18px;text-align:right;display:none}
+.bm-mini.on{display:block}
+.chv-u{font-size:9px;color:var(--dim);flex-shrink:0;transition:transform 0.2s}
+.unit-card.open .chv-u{transform:rotate(180deg)}
+
+/* UNIT BODY */
+.unit-body{display:none;padding:0 10px 10px}
+.unit-card.open .unit-body{display:block}
+
+.stats-row{display:flex;gap:8px;margin-bottom:9px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.sbox{text-align:center;background:#110606;border:1px solid var(--border);padding:3px 7px;border-radius:2px;min-width:40px}
+.sval{font-size:15px;font-weight:600;color:var(--gold);display:block}
+.slbl{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.kws{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px}
+.kw{background:var(--kw);border:1px solid #3a2a2a;color:var(--dim);font-size:10px;padding:2px 6px;border-radius:10px}
+.kw.kw-w{border-color:var(--gold);color:var(--gold)}
+
+/* BLOCKS */
+.blk-title{font-size:10px;letter-spacing:2px;color:var(--accent-br);text-transform:uppercase;margin:9px 0 5px;border-bottom:1px solid var(--border);padding-bottom:2px}
+.weap-card{background:#110606;border:1px solid var(--border);border-radius:2px;padding:5px 8px;margin-bottom:5px}
+.weap-hdr{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:3px}
+.weap-name{font-size:12px;font-weight:600;color:var(--text)}
+.wstat{font-size:10px;color:var(--dim);background:#1a0a0a;padding:1px 5px;border-radius:8px}
+.weap-rule{font-size:11px;color:var(--dim);line-height:1.4}
+
+.abl-card{background:#110606;border-left:3px solid var(--border);padding:5px 8px;margin-bottom:5px}
+.abl-card.goetic{border-left-color:var(--gold)}
+.abl-card.alert{border-left-color:var(--accent-br)}
+.abl-hdr{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
+.abl-name{font-size:12px;font-weight:600;color:var(--text)}
+.gcost{font-size:10px;background:#2a1a00;border:1px solid var(--gold);color:var(--gold);padding:1px 5px;border-radius:8px}
+.abl-desc{font-size:11px;color:var(--dim);line-height:1.4}
+
+/* INJURIES */
+.inj-badge{display:flex;align-items:flex-start;gap:7px;background:var(--inj);border:1px solid #aa0000;padding:5px 8px;border-radius:2px;margin-bottom:4px}
+.inj-badge input{accent-color:#ff4444;margin-top:2px;flex-shrink:0}
+.inj-name{font-size:11px;font-weight:600;color:#ffcccc;line-height:1.3}
+.inj-eff{font-size:10px;color:#cc9999;line-height:1.4;margin-top:2px}
+
+/* ADV BADGE */
+.adv-badge{display:inline-flex;align-items:center;gap:5px;background:#1a2a1a;border:1px solid #2a4a2a;padding:3px 8px;border-radius:2px;margin-bottom:4px;font-size:11px}
+.adv-name{color:#88cc88;font-weight:600}
+.adv-desc{color:var(--dim);font-size:10px}
+
+/* BM COUNTER */
+.bm-ctr{display:flex;align-items:center;gap:7px;margin-top:9px;padding:7px 8px;background:#110606;border:1px solid var(--border);border-radius:2px;flex-wrap:wrap}
+.bm-pips{display:flex;gap:4px;flex:1;flex-wrap:wrap;min-height:14px}
+.bm-pip{width:13px;height:13px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;transition:background 0.1s}
+.bm-pip.filled{background:var(--accent-br);border-color:var(--accent-br)}
+.bm-btn{background:#1a0a0a;border:1px solid var(--border);color:var(--text);width:22px;height:22px;font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:2px;flex-shrink:0;padding-bottom:2px}
+.bm-btn:hover{border-color:var(--accent)}
+.bm-count{font-size:12px;color:var(--gold);min-width:18px;text-align:center;font-weight:600}
+.bm-lbl{font-size:9px;color:var(--dim);flex-shrink:0}
+
+/* TACTICS */
+.tactics{font-style:italic;font-size:11px;color:var(--dim);border-left:2px solid var(--border);padding-left:8px;margin-top:8px;line-height:1.5}
+
+/* BM TABLE */
+.bm-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.bm-table th{background:var(--accent);padding:4px 8px;text-align:left;font-size:11px;letter-spacing:1px}
+.bm-table td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4}
+.bm-table tr:last-child td{border-bottom:none}
+
+/* FOOTER CONTROLS */
+.reset-bar{display:flex;gap:8px;padding:12px;justify-content:flex-end;border-top:1px solid var(--border);margin-top:10px}
+.btn-danger{background:#3a0808;border:1px solid var(--accent);color:var(--text);padding:6px 14px;border-radius:2px}
+.btn-danger:hover{background:#5a1010}
+
+/* PRINT */
+@media print{
+  .hdr{position:static}
+  .hdr-ctrl,.reset-bar,.bm-ctr,.warn-box,.tc-id-row{display:none!important}
+  .sec.collapsed .sec-body,.unit-body{display:block!important}
+  .sec-hdr .chevron,.chv-u{display:none}
+  body{background:white;color:black;font-size:11px}
+  .card-bg,.unit-card,.hdr{background:white;border-color:#999}
+  .gold,.wband-name,.sval,.gcost,.abl-name,.weap-name{color:#333}
+  .kw,.spill{background:#eee;border-color:#ccc;color:#333}
+  .inj-badge{background:#fdd;border-color:#c99}
+  .adv-badge{background:#dfd;border-color:#9c9}
+  .abl-card{border-left-color:#999}
+  .tactics{border-left-color:#999}
+  .unit-card{page-break-inside:avoid;margin-bottom:6px}
+}
+@media(max-width:380px){
+  .uqs{display:none}
+  .wband-name{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="wband-name gothic" id="hdr-name">Smoking Lust</div>
+      <div class="faction-line" id="hdr-faction">Court of the Seven-Headed Serpent · Infernal Noble</div>
+      <div class="faction-line"><a class="tc-link" id="hdr-tc-link" target="_blank">↗ Trench Companion</a><span class="sync-badge" id="sync-badge">⚡ Synced</span></div>
+      <div class="tc-id-row">
+        <span class="tc-id-lbl">TC ID:</span>
+        <input class="tc-id-input" id="tc-id-input" type="text" inputmode="numeric" maxlength="12" placeholder="183662" onkeydown="if(event.key==='Enter')applyTcId()">
+        <button class="btn tc-id-btn" onclick="applyTcId()">↻ Sync</button>
+      </div>
+    </div>
+    <div class="hdr-ctrl">
+      <button class="btn btn-lang" id="lang-btn" onclick="toggleLang()">EN</button>
+      <button class="btn" onclick="resetGame()" title="Reset BMs &amp; checklist">↺ Reset</button>
+    </div>
+  </div>
+  <div class="hdr-stats" id="hdr-stats"></div>
+</div>
+
+<div class="warn-box" id="warn-box"></div>
+
+<div class="sec" id="sec-checklist">
+  <div class="sec-hdr" onclick="toggleSec('sec-checklist')">
+    <h2 data-es="CHECKLIST PRE-PARTIDA" data-en="PRE-GAME CHECKLIST">CHECKLIST PRE-PARTIDA</h2>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="sec-body" id="checklist-body"></div>
+</div>
+
+<div class="sec" id="sec-units" style="margin-top:0">
+  <div class="sec-hdr" onclick="toggleSec('sec-units')">
+    <h2 data-es="BANDA" data-en="WARBAND">BANDA</h2>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="sec-body" style="padding:0" id="units-body"></div>
+</div>
+
+<div class="sec" id="sec-goetic">
+  <div class="sec-hdr" onclick="toggleSec('sec-goetic')">
+    <h2 data-es="MECÁNICA GOÉTICA" data-en="GOETIC MECHANICS">MECÁNICA GOÉTICA</h2>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="sec-body">
+    <table class="bm-table">
+      <thead><tr><th data-es="Blood Marker en…" data-en="Blood Marker on…"></th><th data-es="Efecto" data-en="Effect"></th></tr></thead>
+      <tbody>
+        <tr><td data-es="Atacante / modelo activo" data-en="Attacker / active model"></td><td data-es="-1D a todas sus Actions propias" data-en="-1D to all own Actions"></td></tr>
+        <tr><td data-es="Objetivo" data-en="Target model"></td><td data-es="+1D en Injury Rolls contra ese modelo" data-en="+1D on Injury Rolls against that model"></td></tr>
+        <tr><td data-es="Blessing Marker en activo" data-en="Blessing Marker on active"></td><td data-es="+1D a Actions propias / -1D en Injury Rolls contra él" data-en="+1D to own Actions / -1D on Injury Rolls against"></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5" data-es="Los BM para hechizos GOÉTICOS se retiran de cualquier modelo (aliado o enemigo) sin keyword DEMONIC ni BLACK GRAIL, sin importar distancia ni LoS. El coste puede repartirse entre varios modelos. No se hace Success Roll — paga el coste y el efecto ocurre. Cada hechizo puede lanzarse una vez por Activation del lanzador." data-en="BM for GOETIC spells are removed from any model (friend or foe) without the DEMONIC or BLACK GRAIL keyword, regardless of distance or LoS. The cost can be split across multiple models. No Success Roll needed — pay the cost and the effect happens. Each spell can only be cast once per Activation of the caster."></p>
+  </div>
+</div>
+
+<div class="sec collapsed" id="sec-faction">
+  <div class="sec-hdr" onclick="toggleSec('sec-faction')">
+    <h2 data-es="REGLAS DE FACCIÓN" data-en="FACTION RULES">REGLAS DE FACCIÓN</h2>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="sec-body" id="faction-body"></div>
+</div>
+
+<div class="reset-bar">
+  <button class="btn btn-danger" onclick="resetGame()">
+    <span data-es="↺ Nuevo Juego (resetear BM y checklist)" data-en="↺ New Game (reset BMs &amp; checklist)"></span>
+  </button>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   CONFIG — Change TC_ID to your Trench Companion warband ID
+   ═══════════════════════════════════════════════════════════════════ */
+const TC_ID = "183662";
+const TC_URL = `https://trench-companion.com/warband/detail/${TC_ID}`;
+
+/* ═══════════════════════════════════════════════════════════════════
+   WARBAND DATA
+   To use this page for a different warband:
+   1. Set TC_ID above to your Trench Companion warband ID
+   2. Replace the WARBAND object below with your warband data
+   All UI is generated from this object — no other code changes needed.
+   ═══════════════════════════════════════════════════════════════════ */
+const WARBAND = {
+  meta: {
+    name: "Smoking Lust",
+    faction: {es:"Corte de la Serpiente de Siete Cabezas",en:"Court of the Seven-Headed Serpent"},
+    patron: "Infernal Noble",
+    rating: 1000,
+    glory: 10,
+    stash: 0,
+    gloryUnspent: 2
+  },
+
+  preGameChecklist: [
+    {id:"fp",      label:{es:"☠ FORBIDDEN PLEASURES: elige 1 modelo aliado SIN Demonic por cada Sorcerer/Praetor en mesa → coloca 3 BM. (Objetivo ideal: Wretched)",en:"☠ FORBIDDEN PLEASURES: pick 1 non-Demonic friendly model per Sorcerer/Praetor on table → place 3 BM each. (Ideal target: Wretched)"}},
+    {id:"shell",   label:{es:"🎲 SHELL SHOCKED (Pit Locust Elite): al desplegar, tira 1D6 — con 1-2 aplica -1D a todas sus tiradas toda la partida",en:"🎲 SHELL SHOCKED (Elite Pit Locust): on deploy, roll 1D6 — on 1-2 apply -1D to all rolls for the whole game"}},
+    {id:"law",     label:{es:"⚠ LAW OF HELL: NO dejar que los Wretched lancen el golpe final contra Elites enemigos — se retiran permanentemente del Roster",en:"⚠ LAW OF HELL: NEVER let Wretched land the killing blow on enemy Elites — they are permanently removed from the Roster"}},
+    {id:"darkmem", label:{es:"🎯 DARK MEMORY (Sorcerer): banda temida = Heretic Legion — -1D en Melee contra ellos",en:"🎯 DARK MEMORY (Sorcerer): feared warband = Heretic Legion — -1D to Melee attacks against them"}},
+    {id:"minorw",  label:{es:"🏥 PRAETOR en Reserves (Minor Wound) — no puede usarse en esta partida",en:"🏥 PRAETOR in Reserves (Minor Wound) — cannot be fielded this game"}},
+    {id:"infiltr", label:{es:"🥷 HUNTER (Infiltrator): despliega DESPUÉS de todos los demás, fuera de zona y a 8\"+ de enemigos",en:"🥷 HUNTER (Infiltrator): deploys AFTER all others, outside deployment zone, 8\"+ from enemies"}},
+    {id:"hateful", label:{es:"🔇 YOKE FIENDS: Hateful SUPRIMIDA por Restraining Muzzle — pueden activarse con normalidad",en:"🔇 YOKE FIENDS: Hateful SUPPRESSED by Restraining Muzzle — they activate freely"}},
+    {id:"demonic", label:{es:"🔥 Todos los modelos DEMONIC tienen Negate Fire automático",en:"🔥 All DEMONIC models have Negate Fire automatically"}},
+    {id:"wretlim", label:{es:"📊 LÍMITE WRETCHED: # de Wretched activos debe ser < # de modelos DEMONIC activos",en:"📊 WRETCHED LIMIT: # active Wretched must be < # active DEMONIC models"}}
+  ],
+
+  units: [
+    /* ── ELITES ──────────────────────────────────────────────── */
+    {
+      id:"sorcerer", type:"elite", status:"active",
+      name:{es:"Sorcerer",en:"Sorcerer"},
+      cost:"170D", move:'6"/Fly', melee:"+1D", ranged:"+1D", armour:"-3",
+      keywords:["Negate Shrapnel","Negate Fire","Fear","Flying","Demonic","The Court","Goetic"],
+      weapons:[
+        {name:{es:"Trench Shield",en:"Trench Shield"},range:"Melee",hands:"1H",
+         rule:{es:"Bonus defensivo en melee. Shield Combo: no ocupa mano extra al usar arma 2H con esa indicación.",en:"Defensive bonus in melee. Shield Combo: doesn't occupy hand when using a 2H weapon with that notation."}}
+      ],
+      abilities:[
+        {name:{es:"Forbidden Pleasures",en:"Forbidden Pleasures"},cost:null,goetic:false,alert:true,
+         desc:{es:"HABILIDAD PRE-PARTIDA (no es hechizo). Al inicio de cada partida antes del despliegue: elige 1 modelo aliado SIN Demonic por cada modelo de tu banda con esta habilidad → coloca 3 BM junto a él. (Sorcerer + Praetor = hasta 2 modelos.)",en:"PRE-GAME ABILITY (not a spell). At the start of each game before deployment: pick 1 friendly non-Demonic model per warband model with this ability → place 3 BM next to it. (Sorcerer + Praetor = up to 2 models.)"}},
+        {name:{es:"Burning Inferno",en:"Burning Inferno"},cost:"1–3 BM",goetic:true,alert:false,
+         desc:{es:"Cast Spell Action. Selecciona un PUNTO a 36\" en LoS. Ranged Attack Action: no sufre penalización por Cover. Blast: radio = BM pagados. Keyword FIRE. Ignore Armour solo en impacto directo. En fallo: cae (7 − dado) pulgadas lejos, dirección a elección del oponente.",en:"Cast Spell Action. Select a POINT within 36\" in LoS. Ranged Attack Action: no Cover penalty. Blast radius = BM paid. FIRE keyword. Ignore Armour on direct hit only. On miss: deviates (7 − roll) inches away, direction chosen by opponent."}},
+        {name:{es:"Exquisite Pain",en:"Exquisite Pain"},cost:"1–2 BM",goetic:true,alert:false,
+         desc:{es:"Cast Spell Action. Elige 1 modelo (amigo o enemigo) en LoS. Coloca BM en ese modelo iguales al coste pagado (1→1 BM, 2→2 BM). Útil para cargar BM en Wretched propios.",en:"Cast Spell Action. Pick 1 model (friend or foe) in LoS. Place BM on that model equal to the cost paid (1→1 BM, 2→2 BM). Useful to load BM onto own Wretched."}},
+        {name:{es:"Blessings of the Serpent Moon",en:"Blessings of the Serpent Moon"},cost:"2/4/6 BM",goetic:true,alert:false,
+         desc:{es:"Hechizo GRATUITO (no cuenta para el límite de 3). Lanzar ANTES de que se haga un Injury Roll para el propio lanzador. -1 Injury Modifier por cada 2 BM pagados (2→-1, 4→-2, 6→-3).",en:"FREE spell (does not count toward 3-spell limit). Cast BEFORE an Injury Roll is made for the caster. -1 Injury Modifier per 2 BM paid (2→-1, 4→-2, 6→-3)."}},
+        {name:{es:"Scavenger",en:"Scavenger"},cost:null,goetic:false,alert:false,
+         desc:{es:"Advancement. +1D (Extra Dice) en Exploration Rolls post-partida.",en:"Advancement. +1D (Extra Dice) on post-game Exploration Rolls."}}
+      ],
+      injuries:[
+        {name:{es:"Dark Memory",en:"Dark Memory"},
+         effect:{es:"-1D a Melee Attacks si el objetivo pertenece a la banda temida. [Banda temida: Heretic Legion (Green)]",en:"-1D to Melee Attacks if the target belongs to the feared warband. [Feared warband: Heretic Legion (Green)]"}},
+        {name:{es:"Captured",en:"Captured"},
+         effect:{es:"El oponente captura al modelo. Antes del Trauma Step: negociad un rescate en Ducats. Si no se paga → el modelo muere y se retira del Roster. Si se paga → transferir Ducats al oponente y tratar como Full Recovery.",en:"The opponent captures the model. Before the Trauma Step: negotiate a ransom in Ducats. Not paid → model dies and is removed from Roster. Paid → transfer Ducats to opponent and treat as Full Recovery."}}
+      ],
+      tactics:{es:"Maestro de ceremonias. Forbidden Pleasures pre-partida (carga BM en Wretched). Burning Inferno para área. Exquisite Pain para redistribuir BM. Blessings para sobrevivir Injury Rolls críticos.",en:"Ceremony master. Forbidden Pleasures pre-game (loads BM onto Wretched). Burning Inferno for area damage. Exquisite Pain to redistribute BM. Blessings to survive critical Injury Rolls."}
+    },
+    {
+      id:"pitlocust_e", type:"elite", status:"active",
+      name:{es:"Pit Locust (Elite)",en:"Pit Locust (Elite)"},
+      cost:"105D", move:'8"/Fly', melee:"+2D", ranged:"0D", armour:"-2",
+      keywords:["Negate Fire","Fear","Flying","Demonic","The Court"],
+      weapons:[
+        {name:{es:"Unarmed / Stinger",en:"Unarmed / Stinger"},range:"Melee",hands:"—",
+         rule:{es:"Ver Poison Stingers. El primer ataque tiene keyword SHRAPNEL → causa +1 BM adicional tras el Injury Roll.",en:"See Poison Stingers. The first attack has the SHRAPNEL keyword → places +1 BM after the Injury Roll."}}
+      ],
+      abilities:[
+        {name:{es:"Crown of Hellfire",en:"Crown of Hellfire"},cost:null,goetic:false,alert:false,
+         desc:{es:"Al final de cada Activation del Pit Locust: coloca 1 BM en cada modelo enemigo en Melee Combat con él. Cualquier efecto FIRE negado por Negate Fire cancela este BM. ¡Recordar activarlo cada turno!",en:"At the end of each Pit Locust Activation: place 1 BM on each enemy model in Melee Combat with it. Any effect negated by Negate Fire cancels this BM. Remember to trigger it every turn!"}},
+        {name:{es:"Poison Stingers",en:"Poison Stingers"},cost:null,goetic:false,alert:false,
+         desc:{es:"Puede hacer Melee Attack con keywords Cleave 2 y Shrapnel aunque no tenga arma melee.",en:"Can make a Melee Attack with Cleave 2 and Shrapnel keywords even without a melee weapon."}},
+        {name:{es:"Swarming Attack",en:"Swarming Attack"},cost:null,goetic:false,alert:false,
+         desc:{es:"Al hacer Melee Attack, puede hacer un ataque adicional con su aguijón si Cargó en esta Activación. No sufre penalizaciones por no tener arma ni por mano secundaria. El primer ataque tiene keyword SHRAPNEL → +1 BM adicional.",en:"When making a Melee Attack, can make an extra stinger attack if it Charged this Activation. No penalty for unarmed or off-hand. The first attack has SHRAPNEL keyword → +1 extra BM."}},
+        {name:{es:"Shell Shocked",en:"Shell Shocked"},cost:null,goetic:false,alert:true,
+         desc:{es:"HERIDA. Al desplegar el modelo, tira 1D6. Con 1-2: -1D a TODAS las tiradas de este modelo durante toda la partida. Recordar tirar al desplegar.",en:"INJURY. On deploy, roll 1D6. On 1-2: -1D to ALL rolls for this model for the whole game. Remember to roll on deploy."}},
+        {name:{es:"Scavenger",en:"Scavenger"},cost:null,goetic:false,alert:false,
+         desc:{es:"Advancement. +1D en Exploration Rolls post-partida.",en:"Advancement. +1D on post-game Exploration Rolls."}}
+      ],
+      injuries:[
+        {name:{es:"Shell Shocked",en:"Shell Shocked"},
+         effect:{es:"Al desplegar: tira 1D6. Con 1-2 → -1D a todas sus tiradas toda la partida.",en:"On deploy: roll 1D6. On 1-2 → -1D to all rolls for the whole game."}}
+      ],
+      tactics:{es:"Bestia voladora de melee. Carga para activar el ataque extra del aguijón y el BM del SHRAPNEL. Crown of Hellfire acumula BM adicionales en enemigos en Melee cada turno. SHRAPNEL del primer ataque puede llegar a modelos cercanos.",en:"Flying melee beast. Charge to trigger the extra stinger attack and SHRAPNEL BM. Crown of Hellfire stacks extra BM on enemies in Melee each turn. SHRAPNEL on first attack can spread to nearby models."}
+    },
+    {
+      id:"hunter", type:"elite", status:"active",
+      name:{es:"Hunter of the Left-Hand Path",en:"Hunter of the Left-Hand Path"},
+      cost:"170D", move:'6"/Inf', melee:"+1D", ranged:"+2D", armour:"-2",
+      keywords:["Negate Shrapnel","Negate Fire","Infiltrator","Demonic","The Court"],
+      weapons:[
+        {name:{es:"Bow of Lethe",en:"Bow of Lethe"},range:'36"',hands:"1H",
+         rule:{es:"ASSAULT (disparar no impide Charge/Fight en misma Activation). Antes de cada Injury Roll elige: +2 Injury Dice O Ignore Armour. Siempre ocupa un brazo.",en:"ASSAULT (shooting does not prevent Charge/Fight same Activation). Before each Injury Roll choose: +2 Injury Dice OR Ignore Armour. Always occupies one hand."}},
+        {name:{es:"Head Taker",en:"Head Taker"},range:"Melee",hands:"1H",
+         rule:{es:"+2 Injury Modifier si el objetivo NO ha sido Activado aún este turno. Atacar siempre primero cuando sea posible.",en:"+2 Injury Modifier if the target has NOT been Activated yet this turn. Always attack first when possible."}}
+      ],
+      abilities:[
+        {name:{es:"Infiltrator",en:"Infiltrator"},cost:null,goetic:false,alert:false,
+         desc:{es:"Se despliega DESPUÉS de todos los demás, fuera de zona de despliegue y a 8\" o más de enemigos.",en:"Deploys AFTER all other models, outside deployment zones, 8\" or more from any enemy model."}},
+        {name:{es:"Shadowwalker",en:"Shadowwalker"},cost:"2 BM",goetic:true,alert:false,
+         desc:{es:"Lanzar ANTES de que el lanzador tome Retreat Action. Los modelos enemigos no pueden hacer Melee Attack contra el lanzador cuando se retira.",en:"Cast BEFORE the caster takes a Retreat Action. Enemy models cannot make Melee Attacks against the caster when it retreats."}},
+        {name:{es:"Left-Hand Path",en:"Left-Hand Path"},cost:"2 BM/salto",goetic:true,alert:false,
+         desc:{es:"Lanzar cuando el lanzador toma Move, Charge, Retreat o Dash Action y hace contacto con un trozo de terreno. Interrumpe el movimiento: retira al lanzador del tablero y redeploialo en contacto con OTRO trozo de terreno a más de 1\" de enemigos (excepto en Charge: debe redesplegar más cerca del objetivo). Continúa el movimiento desde el nuevo punto. Puede usarse múltiples veces por movimiento (2 BM cada salto).",en:"Cast when the caster takes a Move, Charge, Retreat, or Dash Action and moves into contact with a terrain piece. Interrupt the move: remove the caster and redeploy in contact with ANOTHER terrain piece, more than 1\" from enemies (unless charging: must redeploy closer to target). Continue the move from the new point. Can be used multiple times per move (2 BM per jump)."}},
+        {name:{es:"Oracle Beast Cloak",en:"Oracle Beast Cloak"},cost:"3 BM",goetic:true,alert:false,
+         desc:{es:"Una vez por Turno. Lanzar DESPUÉS de que se haga un Injury Roll para el lanzador. El resultado del Injury Roll cambia a No Effect (los efectos Blast sobre otros modelos aplican con normalidad).",en:"Once per Turn. Cast AFTER an Injury Roll is made for the caster. The Injury Roll result is changed to No Effect (Blast effects on other models apply normally)."}}
+      ],
+      injuries:[],
+      tactics:{es:"Infiltradora de élite con movilidad extrema. Despliega en flancos. Left-Hand Path permite saltos entre terrenos durante cualquier movimiento. Shadowwalker = salida gratis de melee. Oracle Beast Cloak = salvación de emergencia casi total. Bow of Lethe con ASSAULT permite disparar y cargar en la misma activación.",en:"Elite infiltrator with extreme mobility. Deploy on flanks. Left-Hand Path jumps between terrain pieces during any movement. Shadowwalker = free melee escape. Oracle Beast Cloak = near-total emergency save. Bow of Lethe with ASSAULT allows shooting and charging in the same activation."}
+    },
+    {
+      id:"hellknight", type:"elite", status:"active",
+      name:{es:"Hell Knight",en:"Hell Knight"},
+      cost:"145D", move:'6"/Inf', melee:"+2D", ranged:"0D", armour:"-2",
+      keywords:["Negate Shrapnel","Negate Fire","Strong","Negate Heavy","Demonic","The Court","Goetic"],
+      weapons:[
+        {name:{es:"Ophidian Rifle",en:"Ophidian Rifle"},range:'30"',hands:"2H",
+         rule:{es:"HEAVY (no mover/cargar/retirarse en la misma Activation). UNNATURAL INVERSION: gana +1D al ataque cuando Cover o Long Range aplicarían -1D. Si ambos aplican → +2D. El rifle es MEJOR disparando lejos o en cobertura.",en:"HEAVY (cannot move/charge/retreat same Activation). UNNATURAL INVERSION: gains +1D to attack roll when Cover or Long Range would apply -1D. If both apply → +2D. The rifle is BETTER at long range or through cover."}},
+        {name:{es:"Hellblade",en:"Hellblade"},range:"Melee",hands:"2H",
+         rule:{es:"+1 Injury Dice. FIRE (tras el Injury Roll coloca 1 BM extra en el objetivo aunque sea No Effect). STRONG permite usarlo como 1H.",en:"+1 Injury Dice. FIRE (after the Injury Roll, place 1 extra BM on the target even on No Effect). STRONG allows using it as 1H."}},
+        {name:{es:"Infernal Iron Armour",en:"Infernal Iron Armour"},range:"—",hands:"—",
+         rule:{es:"-2 Injury Modifier incluido en el perfil. PERMANENTE: no puede perderse ni por Injury ni por ninguna regla de campaña.",en:"-2 Injury Modifier already included in profile. PERMANENT: cannot be lost by any Injury or campaign rule."}}
+      ],
+      abilities:[
+        {name:{es:"Strong",en:"Strong"},cost:null,goetic:false,alert:false,
+         desc:{es:"Negate Heavy (puede ignorar el keyword Heavy en armas propias) + puede usar armas 2H como si fueran 1H.",en:"Negate Heavy (can ignore the Heavy keyword on own weapons) + can use 2H weapons as if they were 1H."}},
+        {name:{es:"Blood Magic",en:"Blood Magic"},cost:"1 BM",goetic:true,alert:false,
+         desc:{es:"Obligatorio y gratuito. Lanzar ANTES de hacer Injury Rolls de un ataque del lanzador. +1 Injury Dice a TODOS los Injury Rolls de ese ataque (incluye todos los modelos en blast). Activar siempre que haya BM disponibles.",en:"Mandatory and free. Cast BEFORE making Injury Rolls for the caster's attack. +1 Injury Dice to ALL Injury Rolls of that attack (includes all models in a blast). Trigger whenever BM are available."}}
+      ],
+      injuries:[],
+      tactics:{es:"Arma doble: francotirar con el Rifle (mejor desde lejos/cobertura gracias a Unnatural Inversion) o destruir en melee con el Hellblade (+1 Injury Dice + Fire). No puede hacer las dos en la misma Activation por el keyword Heavy del Rifle. Blood Magic multiplica el daño cuando sea crucial.",en:"Dual role: snipe with the Rifle (better at range/cover thanks to Unnatural Inversion) or devastate in melee with the Hellblade (+1 Injury Dice + Fire). Cannot do both in the same Activation due to the Rifle's Heavy keyword. Blood Magic multiplies damage when it matters most."}
+    },
+
+    /* ── TROOPS ──────────────────────────────────────────────── */
+    {
+      id:"pitlocust_t", type:"troop", status:"active",
+      name:{es:"Pit Locust (Tropa)",en:"Pit Locust (Troop)"},
+      cost:"105D", move:'8"/Fly', melee:"+2D", ranged:"0D", armour:"-2",
+      keywords:["Negate Fire","Fear","Flying","Demonic","The Court"],
+      weapons:[
+        {name:{es:"Unarmed / Stinger",en:"Unarmed / Stinger"},range:"Melee",hands:"—",
+         rule:{es:"Ver Poison Stingers. El primer ataque tiene keyword SHRAPNEL → +1 BM.",en:"See Poison Stingers. First attack has SHRAPNEL keyword → +1 BM."}}
+      ],
+      abilities:[
+        {name:{es:"Crown of Hellfire",en:"Crown of Hellfire"},cost:null,goetic:false,alert:false,
+         desc:{es:"Al final de cada Activation: coloca 1 BM en cada modelo enemigo en Melee Combat con él.",en:"At end of each Activation: place 1 BM on each enemy model in Melee Combat with it."}},
+        {name:{es:"Poison Stingers",en:"Poison Stingers"},cost:null,goetic:false,alert:false,
+         desc:{es:"Melee Attack con Cleave 2 y Shrapnel aunque no tenga arma melee.",en:"Melee Attack with Cleave 2 and Shrapnel even without a melee weapon."}},
+        {name:{es:"Swarming Attack",en:"Swarming Attack"},cost:null,goetic:false,alert:false,
+         desc:{es:"Ataque adicional de aguijón si Cargó. El primer ataque tiene SHRAPNEL → +1 BM adicional.",en:"Extra stinger attack if it Charged. First attack has SHRAPNEL → +1 extra BM."}}
+      ],
+      injuries:[],
+      tactics:{es:"Igual que el Elite Pit Locust pero sin heridas ni avances. Cargar para activar Swarming Attack y el SHRAPNEL del primer golpe.",en:"Same as Elite Pit Locust but without injuries or advancements. Charge to trigger Swarming Attack and SHRAPNEL on the first hit."}
+    },
+    {
+      id:"yokefiend_1", type:"troop", status:"active",
+      name:{es:"Yoke Fiend (Gas Grenades)",en:"Yoke Fiend (Gas Grenades)"},
+      cost:"68D", move:'6"/Inf', melee:"+1D", ranged:"+1D", armour:"0",
+      keywords:["Negate Fire","Demonic","The Court"],
+      weapons:[
+        {name:{es:"Shotgun",en:"Shotgun"},range:'18"',hands:"2H",
+         rule:{es:"SHOTGUN: en Long Range aplica -1 Injury Dice en lugar del habitual -1D al hit. Usar a distancia corta siempre que sea posible.",en:"SHOTGUN: at Long Range applies -1 Injury Dice instead of the usual -1D to hit. Use at short range whenever possible."}},
+        {name:{es:"Torture Instrument",en:"Torture Instrument"},range:"Melee",hands:"2H",
+         rule:{es:"AGONISING INJURIES: en Injury Roll, tira 1D6 (no 2D6) pero duplica los BM causados. +/- Injury Dice aplican sobre el único dado. Mejor para acumular BM que para matar.",en:"AGONISING INJURIES: on Injury Roll, roll 1D6 (not 2D6) but double the BM caused. +/- Injury Dice apply to the single die. Better for stacking BM than outright killing."}},
+        {name:{es:"Gas Grenades",en:"Gas Grenades"},range:'8"',hands:"1H",
+         rule:{es:"GAS: tras el Injury Roll coloca 1 BM extra en el objetivo aunque sea No Effect. GRENADE: no ocupa ranura de arma, puede usarse todas las veces que quieras.",en:"GAS: after the Injury Roll place 1 extra BM on the target even on No Effect. GRENADE: does not occupy a weapon slot, can be used as many times as desired."}}
+      ],
+      abilities:[
+        {name:{es:"Torturer",en:"Torturer"},cost:null,goetic:false,alert:false,
+         desc:{es:"Al hacer Melee Attack puede elegir un modelo aliado SIN keyword Demonic como objetivo. Si lo hace, no puede atacar de nuevo en esa Activación. Ideal para cargar BM en Wretched propios.",en:"When making a Melee Attack can target a friendly model without the Demonic keyword. If it does so, it cannot attack again this Activation. Ideal for loading BM onto own Wretched."}},
+        {name:{es:"Hateful (SUPRIMIDA)",en:"Hateful (SUPPRESSED)"},cost:null,goetic:false,alert:false,
+         desc:{es:"SUPRIMIDA por Restraining Muzzle. Sin efecto mientras lleve el Muzzle.",en:"SUPPRESSED by Restraining Muzzle. No effect while wearing the Muzzle."}}
+      ],
+      injuries:[],
+      tactics:{es:"Choque y acumulación de BM. Gas Grenades + Torture Instrument llena de BM a objetivos clave. Torturer puede cargar BM en Wretched propios para usar como combustible de hechizos.",en:"Shock and BM accumulation. Gas Grenades + Torture Instrument stacks BM on key targets. Torturer can load BM onto own Wretched as spell fuel."}
+    },
+    {
+      id:"yokefiend_2", type:"troop", status:"active",
+      name:{es:"Yoke Fiend (A)",en:"Yoke Fiend (A)"},
+      cost:"58D", move:'6"/Inf', melee:"+1D", ranged:"+1D", armour:"0",
+      keywords:["Negate Fire","Demonic","The Court"],
+      weapons:[
+        {name:{es:"Shotgun",en:"Shotgun"},range:'18"',hands:"2H",
+         rule:{es:"SHOTGUN: en Long Range -1 Injury Dice. Usar a corta distancia.",en:"SHOTGUN: at Long Range -1 Injury Dice. Use at short range."}},
+        {name:{es:"Torture Instrument",en:"Torture Instrument"},range:"Melee",hands:"2H",
+         rule:{es:"AGONISING INJURIES: 1D6 (no 2D6) pero duplica BM. Mejor para acumular BM.",en:"AGONISING INJURIES: 1D6 (not 2D6) but doubles BM. Better for stacking BM."}}
+      ],
+      abilities:[
+        {name:{es:"Torturer",en:"Torturer"},cost:null,goetic:false,alert:false,
+         desc:{es:"Melee Attack puede apuntar a aliado SIN Demonic. No ataca de nuevo esa Activación.",en:"Melee Attack can target friendly model without Demonic. Cannot attack again that Activation."}},
+        {name:{es:"Hateful (SUPRIMIDA)",en:"Hateful (SUPPRESSED)"},cost:null,goetic:false,alert:false,
+         desc:{es:"SUPRIMIDA por Restraining Muzzle.",en:"SUPPRESSED by Restraining Muzzle."}}
+      ],
+      injuries:[],
+      tactics:{es:"Choque y acumulación de BM con Torture Instrument. Torturer puede cargar BM en Wretched.",en:"Shock and BM stacking with Torture Instrument. Torturer loads BM onto Wretched."}
+    },
+    {
+      id:"yokefiend_3", type:"troop", status:"active",
+      name:{es:"Yoke Fiend (B)",en:"Yoke Fiend (B)"},
+      cost:"58D", move:'6"/Inf', melee:"+1D", ranged:"+1D", armour:"0",
+      keywords:["Negate Fire","Demonic","The Court"],
+      weapons:[
+        {name:{es:"Shotgun",en:"Shotgun"},range:'18"',hands:"2H",
+         rule:{es:"SHOTGUN: en Long Range -1 Injury Dice. Usar a corta distancia.",en:"SHOTGUN: at Long Range -1 Injury Dice. Use at short range."}},
+        {name:{es:"Torture Instrument",en:"Torture Instrument"},range:"Melee",hands:"2H",
+         rule:{es:"AGONISING INJURIES: 1D6 (no 2D6) pero duplica BM. Mejor para acumular BM.",en:"AGONISING INJURIES: 1D6 (not 2D6) but doubles BM. Better for stacking BM."}}
+      ],
+      abilities:[
+        {name:{es:"Torturer",en:"Torturer"},cost:null,goetic:false,alert:false,
+         desc:{es:"Melee Attack puede apuntar a aliado SIN Demonic. No ataca de nuevo esa Activación.",en:"Melee Attack can target friendly model without Demonic. Cannot attack again that Activation."}},
+        {name:{es:"Hateful (SUPRIMIDA)",en:"Hateful (SUPPRESSED)"},cost:null,goetic:false,alert:false,
+         desc:{es:"SUPRIMIDA por Restraining Muzzle.",en:"SUPPRESSED by Restraining Muzzle."}}
+      ],
+      injuries:[],
+      tactics:{es:"Choque y acumulación de BM con Torture Instrument. Torturer carga BM en Wretched.",en:"Shock and BM stacking. Torturer loads BM onto Wretched."}
+    },
+    {
+      id:"wretched_1", type:"troop", status:"active",
+      name:{es:"Wretched (Shovel)",en:"Wretched (Shovel)"},
+      cost:"25D", move:'6"/Inf', melee:"-1D", ranged:"-1D", armour:"0",
+      keywords:["The Court"],
+      weapons:[{name:{es:"Shovel",en:"Shovel"},range:"Melee",hands:"—",rule:{es:"Sin reglas especiales.",en:"No special rules."}}],
+      abilities:[
+        {name:{es:"Law of Hell",en:"Law of Hell"},cost:null,goetic:false,alert:true,
+         desc:{es:"⚠ Si un ataque del Wretched saca fuera de combate a un modelo enemigo con keyword ELITE: el Wretched gana su libertad y es retirado PERMANENTEMENTE del Roster (no cuenta como baja para Morale, pero se elimina del Roster). NUNCA dejar que los Wretched den el golpe final a Elites.",en:"⚠ If a Wretched's attack takes an enemy ELITE model Out of Action: the Wretched gains its freedom and is PERMANENTLY removed from the Roster (does not count as a casualty for Morale, but is removed from the Roster). NEVER let Wretched land the killing blow on Elites."}}
+      ],
+      injuries:[],
+      tactics:{es:"Combustible de BM (via Forbidden Pleasures y Torturer de los Yoke Fiends). Escudos de carne y bloqueadores. En combate son los peores — úsalos para posicionarte o para acumular BM.",en:"BM fuel (via Forbidden Pleasures and Yoke Fiend Torturer). Meatshields and blockers. Terrible in combat — use for positioning or BM stacking only."}
+    },
+    {
+      id:"wretched_2", type:"troop", status:"active",
+      name:{es:"Wretched (Shovel)",en:"Wretched (Shovel)"},
+      cost:"25D", move:'6"/Inf', melee:"-1D", ranged:"-1D", armour:"0",
+      keywords:["The Court"],
+      weapons:[{name:{es:"Shovel",en:"Shovel"},range:"Melee",hands:"—",rule:{es:"Sin reglas especiales.",en:"No special rules."}}],
+      abilities:[
+        {name:{es:"Law of Hell",en:"Law of Hell"},cost:null,goetic:false,alert:true,
+         desc:{es:"⚠ Matar Elite enemigo → retirado permanentemente del Roster.",en:"⚠ Kill enemy Elite → permanently removed from Roster."}}
+      ],
+      injuries:[],
+      tactics:{es:"BM fuel y escudo de carne.",en:"BM fuel and meatshield."}
+    },
+    {
+      id:"wretched_3", type:"troop", status:"active",
+      name:{es:"Wretched (Shovel)",en:"Wretched (Shovel)"},
+      cost:"25D", move:'6"/Inf', melee:"-1D", ranged:"-1D", armour:"0",
+      keywords:["The Court"],
+      weapons:[{name:{es:"Shovel",en:"Shovel"},range:"Melee",hands:"—",rule:{es:"Sin reglas especiales.",en:"No special rules."}}],
+      abilities:[
+        {name:{es:"Law of Hell",en:"Law of Hell"},cost:null,goetic:false,alert:true,
+         desc:{es:"⚠ Matar Elite enemigo → retirado permanentemente del Roster.",en:"⚠ Kill enemy Elite → permanently removed from Roster."}}
+      ],
+      injuries:[],
+      tactics:{es:"BM fuel y escudo de carne.",en:"BM fuel and meatshield."}
+    },
+    {
+      id:"wretched_4", type:"troop", status:"active",
+      name:{es:"Wretched (Shovel)",en:"Wretched (Shovel)"},
+      cost:"25D", move:'6"/Inf', melee:"-1D", ranged:"-1D", armour:"0",
+      keywords:["The Court"],
+      weapons:[{name:{es:"Shovel",en:"Shovel"},range:"Melee",hands:"—",rule:{es:"Sin reglas especiales.",en:"No special rules."}}],
+      abilities:[
+        {name:{es:"Law of Hell",en:"Law of Hell"},cost:null,goetic:false,alert:true,
+         desc:{es:"⚠ Matar Elite enemigo → retirado permanentemente del Roster.",en:"⚠ Kill enemy Elite → permanently removed from Roster."}}
+      ],
+      injuries:[],
+      tactics:{es:"BM fuel y escudo de carne.",en:"BM fuel and meatshield."}
+    },
+    {
+      id:"wretched_5", type:"troop", status:"active",
+      name:{es:"Wretched (Trench Knife)",en:"Wretched (Trench Knife)"},
+      cost:"21D", move:'6"/Inf', melee:"-1D", ranged:"-1D", armour:"0",
+      keywords:["The Court"],
+      weapons:[{name:{es:"Trench Knife",en:"Trench Knife"},range:"Melee",hands:"—",rule:{es:"Sin reglas especiales.",en:"No special rules."}}],
+      abilities:[
+        {name:{es:"Law of Hell",en:"Law of Hell"},cost:null,goetic:false,alert:true,
+         desc:{es:"⚠ Matar Elite enemigo → retirado permanentemente del Roster.",en:"⚠ Kill enemy Elite → permanently removed from Roster."}}
+      ],
+      injuries:[],
+      tactics:{es:"BM fuel y escudo de carne.",en:"BM fuel and meatshield."}
+    },
+
+    /* ── MERCENARIES ─────────────────────────────────────────── */
+    {
+      id:"warlock", type:"mercenary", status:"active",
+      name:{es:"Goetic Warlock",en:"Goetic Warlock"},
+      cost:"4 Glory", move:'6"/Inf', melee:"+1D", ranged:"+1D", armour:"-2",
+      keywords:["Negate Fire","Fear","Demonic","Artificial"],
+      weapons:[
+        {name:{es:"Sword / Axe ×2",en:"Sword / Axe ×2"},range:"Melee",hands:"1H+1H",
+         rule:{es:"Dos armas 1H. Reglas de dual wield según armoury general: Off-Hand Weapon modifier en el segundo ataque.",en:"Two 1H weapons. Dual wield rules per general armoury: Off-Hand Weapon modifier on the second attack."}},
+        {name:{es:"Iron Clawed Hands",en:"Iron Clawed Hands"},range:"Melee",hands:"—",
+         rule:{es:"Melee Attack con Cleave 2 y Critical aunque no tenga arma melee. Off-Hand Weapon modifier en el segundo ataque.",en:"Melee Attack with Cleave 2 and Critical even without a melee weapon. Off-Hand Weapon modifier on the second attack."}}
+      ],
+      abilities:[
+        {name:{es:"Goetic Portal",en:"Goetic Portal"},cost:null,goetic:false,alert:false,
+         desc:{es:"Acción. Risky Success Roll con +1D. Fallo: fin de activación. Éxito o Critical: redesplega en cualquier punto a 6\" de la posición original (centro a centro). Puede redesplegar aunque esté Down o a 1\" de un enemigo (el enemigo no puede atacar antes del redespliegue). BONUS: si hay modelo enemigo en base ≤32mm a 1\" del Warlock y el roll es éxito, puede llevárselo consigo — redespliega al Warlock primero, luego al enemigo a 1\" del Warlock.",en:"Action. Risky Success Roll with +1D. Failure: end Activation. Success or Critical: redeploy anywhere within 6\" of original position (centre to centre). Can redeploy while Down or within 1\" of an enemy (enemy cannot attack before redeploy). BONUS: if an enemy model on a ≤32mm base is within 1\", on success it can be taken along — redeploy the Warlock first, then the enemy within 1\" of the Warlock."}},
+        {name:{es:"Barbed Embrace",en:"Barbed Embrace"},cost:null,goetic:false,alert:false,
+         desc:{es:"Un modelo enemigo a 1\" del Goetic Warlock no puede tomar Retreat Action.",en:"An enemy model within 1\" of the Goetic Warlock cannot take a Retreat Action."}},
+        {name:{es:"Goetic Gaze",en:"Goetic Gaze"},cost:null,goetic:false,alert:false,
+         desc:{es:"Acción. Success Roll. Fallo: nada. Éxito: coloca 1 BM en un modelo enemigo en LoS a 24\". Critical: 2 BM en lugar de 1.",en:"Action. Success Roll. Failure: nothing. Success: place 1 BM on an enemy model in LoS within 24\". Critical: 2 BM instead of 1."}}
+      ],
+      injuries:[],
+      tactics:{es:"Repositionador supremo. Goetic Portal para escapar, flanquear o reposicionarse en puntos de objetivo. Barbed Embrace atrapa enemigos a 1\" — no pueden Retirarse. Goetic Gaze para acumular BM en objetivos clave desde lejos.",en:"Supreme repositioner. Goetic Portal to escape, flank, or grab objective points. Barbed Embrace traps enemies within 1\" — they cannot Retreat. Goetic Gaze to stack BM on key targets from range."}
+    },
+    {
+      id:"sineater", type:"mercenary", status:"active",
+      name:{es:"Sin Eater",en:"Sin Eater"},
+      cost:"6 Glory", move:'6"/Inf', melee:"+2D", ranged:"—", armour:"-2",
+      keywords:["Negate Shrapnel","Negate Fire","Fear","Strong","Negate Heavy","Tough","Demonic"],
+      weapons:[
+        {name:{es:"Tenderizer Maul",en:"Tenderizer Maul"},range:"Melee",hands:"2H",
+         rule:{es:"+1 Injury Modifier. HEAVY (no mover/cargar/retirarse en misma Activation). SWINGING BLOW: al hacer Fight Action puede hacer 1 Melee Attack contra CADA modelo enemigo a 1\" del atacante — resuelve uno a uno. Strong permite usarlo como 1H.",en:"+1 Injury Modifier. HEAVY (cannot move/charge/retreat same Activation). SWINGING BLOW: on Fight Action can make 1 Melee Attack against EACH enemy within 1\" of the attacker — resolve one at a time. Strong allows using as 1H."}}
+      ],
+      abilities:[
+        {name:{es:"Tough",en:"Tough"},cost:null,goetic:false,alert:false,
+         desc:{es:"El primer resultado OOA de cualquier fuente se convierte en Down. El siguiente OOA saca al modelo de combate normalmente.",en:"The first OOA result from any source becomes Down instead. The next OOA takes the model out normally."}},
+        {name:{es:"Strong",en:"Strong"},cost:null,goetic:false,alert:false,
+         desc:{es:"Negate Heavy (puede ignorar el keyword Heavy en armas propias) + puede usar armas 2H como 1H.",en:"Negate Heavy (can ignore the Heavy keyword on own weapons) + can use 2H weapons as if they were 1H."}},
+        {name:{es:"Devour the Guilty",en:"Devour the Guilty"},cost:null,goetic:false,alert:false,
+         desc:{es:"Acción. Elige 1 modelo (aliado o enemigo) a 1\" en base ≤40mm. Enemigo: Risky Roll. Aliado: Success Roll +1D. Fallo: fin de Activation (si Risky) o nada (si normal). Éxito: el modelo queda atrapado DENTRO del Sin Eater. Máximo 1 devorado a la vez. El devorado: fuera de juego (Down para Moral), conserva marcadores. Cuando se Activa puede hacer Fight Action contra el Sin Eater con -3D (sin reglas especiales). CADA VEZ QUE EL SIN EATER SE ACTIVA: coloca 1 BM en el devorado — a 6 BM el devorado muere inmediatamente (OOA sin salvación). Si el Sin Eater cae OOA: despliega al devorado Down a 1\" — si imposible, también muere.",en:"Action. Pick 1 model (friend or foe) within 1\" on a ≤40mm base. Enemy: Risky Roll. Friendly: Success Roll +1D. Failure: end Activation (if Risky) or nothing (if normal). Success: the model is trapped INSIDE the Sin Eater. Max 1 devoured at a time. The devoured model: out of play (counts as Down for Morale), keeps its markers. When Activated, it can Fight Action against the Sin Eater with -3D (no special rules). EACH TIME THE SIN EATER ACTIVATES: place 1 BM on the devoured model — at 6 BM the devoured model immediately dies (OOA, no saves). If the Sin Eater falls OOA: deploy devoured Down within 1\" — if impossible, it also dies."}},
+        {name:{es:"Purge Action",en:"Purge Action"},cost:null,goetic:false,alert:false,
+         desc:{es:"Requiere tener un modelo devorado. Acción. Success Roll con +4D. Fallo: nada. Éxito: despliega al devorado Down a 1\" del Sin Eater — si imposible, se queda dentro. Una vez liberado puede Activarse con normalidad.",en:"Requires a devoured model. Action. Success Roll with +4D. Failure: nothing. Success: deploy devoured Down within 1\" of the Sin Eater — if impossible, it stays inside. Once released, can Activate normally."}}
+      ],
+      injuries:[],
+      tactics:{es:"Tanque melee. Tough absorbe el primer OOA. Swinging Blow devasta grupos. Devour es ideal para secuestrar un Elite enemigo o para salvar un aliado que va a ser OOA de todas formas (evita Injury Rolls). Purge libera al devorado si es necesario.",en:"Melee tank. Tough absorbs the first OOA. Swinging Blow devastates groups. Devour is ideal for kidnapping a key enemy Elite or saving an allied model about to go OOA (prevents Injury Rolls). Purge releases the devoured model if needed."}
+    },
+
+    /* ── RESERVES ────────────────────────────────────────────── */
+    {
+      id:"praetor", type:"reserve", status:"reserve",
+      name:{es:"Praetor (Reserves)",en:"Praetor (Reserves)"},
+      cost:"265D", move:'8"/Fly', melee:"+3D", ranged:"+3D", armour:"-2",
+      keywords:["Negate Shrapnel","Negate Fire","Fear","Strong","Negate Heavy","Tough","Leader","Flying","Demonic","The Court","Goetic"],
+      weapons:[
+        {name:{es:"Serpent Assault Gun",en:"Serpent Assault Gun"},range:'36"',hands:"2H",
+         rule:{es:"ASSAULT (disparar no impide Charge/Fight). AUTOMATIC 2 (2 ataques por Shoot Action, objetivos a máximo 6\" entre sí). GAS (+1 BM extra tras Injury Roll aunque sea No Effect). HEAVY (no mover/cargar en misma Activation).",en:"ASSAULT (shooting doesn't prevent Charge/Fight). AUTOMATIC 2 (2 attacks per Shoot Action, targets within 6\" of each other). GAS (+1 extra BM after Injury Roll even on No Effect). HEAVY (cannot move/charge same Activation)."}},
+        {name:{es:"Head Taker",en:"Head Taker"},range:"Melee",hands:"1H",
+         rule:{es:"+2 Injury Modifier si el objetivo NO ha sido Activado aún este turno.",en:"+2 Injury Modifier if the target has NOT been Activated this turn."}},
+        {name:{es:"Hellblade",en:"Hellblade"},range:"Melee",hands:"2H",
+         rule:{es:"+1 Injury Dice. FIRE (+1 BM extra tras Injury Roll aunque sea No Effect). Strong permite usarlo como 1H.",en:"+1 Injury Dice. FIRE (+1 extra BM after Injury Roll even on No Effect). Strong allows using as 1H."}}
+      ],
+      abilities:[
+        {name:{es:"Leader",en:"Leader"},cost:null,goetic:false,alert:false,
+         desc:{es:"+1D a Morale Checks de la banda si está en mesa y no está Down/OOA.",en:"+1D to warband Morale Checks if on table and not Down/OOA."}},
+        {name:{es:"Sharp Eyes",en:"Sharp Eyes"},cost:null,goetic:false,alert:false,
+         desc:{es:"Advancement. Ignore LONG RANGE: no sufre penalización por Long Range en ataques a distancia.",en:"Advancement. Ignore LONG RANGE: no Long Range penalty on ranged attacks."}},
+        {name:{es:"Forbidden Pleasures",en:"Forbidden Pleasures"},cost:null,goetic:false,alert:true,
+         desc:{es:"HABILIDAD PRE-PARTIDA. Igual que el Sorcerer: elige 1 modelo aliado SIN Demonic y coloca 3 BM. (Sorcerer + Praetor = hasta 2 modelos reciben 3 BM pre-partida.)",en:"PRE-GAME ABILITY. Same as Sorcerer: pick 1 friendly non-Demonic model and place 3 BM. (Sorcerer + Praetor = up to 2 models get 3 BM pre-game.)"}},
+        {name:{es:"Call of the Flesh",en:"Call of the Flesh"},cost:"15D",goetic:true,alert:false,
+         desc:{es:"Goetic Power comprado. Ver compendio TC para descripción completa.",en:"Purchased Goetic Power. See TC compendium for full description."}},
+        {name:{es:"Minor Wound",en:"Minor Wound"},cost:null,goetic:false,alert:true,
+         desc:{es:"HERIDA. Este modelo no puede usarse en la siguiente partida.",en:"INJURY. This model cannot be used in the next game."}}
+      ],
+      injuries:[
+        {name:{es:"Minor Wound",en:"Minor Wound"},
+         effect:{es:"No puede usarse en la siguiente partida.",en:"Cannot be used in the next game."}}
+      ],
+      tactics:{es:"Comandante voladora de máxima potencia. Serpent Assault Gun con ASSAULT + AUTOMATIC 2 permite 2 disparos y aún cargar. Sharp Eyes ignora Long Range. Head Taker devasta a modelos sin activar. Forbidden Pleasures pre-partida añade 3 BM extra a un segundo Wretched.",en:"Maximum-power flying commander. Serpent Assault Gun with ASSAULT + AUTOMATIC 2 allows 2 shots and still charging. Sharp Eyes ignores Long Range. Head Taker devastates non-activated models. Forbidden Pleasures pre-game adds 3 extra BM to a second Wretched."}
+    }
+  ],
+
+  factionRules: [
+    {title:{es:"Demonic = Negate Fire",en:"Demonic = Negate Fire"},alert:false,
+     body:{es:"Todos los modelos con keyword DEMONIC tienen Negate Fire automáticamente. Cualquier efecto FIRE o GAS dirigido a ellos no coloca BM ni produce efectos de Fire.",en:"All models with the DEMONIC keyword automatically have Negate Fire. Any FIRE or GAS effect directed at them does not place BM or produce Fire effects."}},
+    {title:{es:"Límite de Wretched",en:"Wretched Limit"},alert:true,
+     body:{es:"El número de Wretched activos en el Roster debe ser MENOR que el número de modelos con keyword DEMONIC activos. Controlar siempre antes de reclutar más Wretched.",en:"The number of active Wretched in the Roster must be LESS THAN the number of active DEMONIC models. Always check before recruiting more Wretched."}},
+    {title:{es:"Law of Hell — Wretched",en:"Law of Hell — Wretched"},alert:true,
+     body:{es:"Si un ataque de un Wretched saca fuera de combate a un modelo enemigo con keyword ELITE: el Wretched gana su libertad y es retirado PERMANENTEMENTE del Roster (no baja para Moral, pero se elimina). NUNCA dejar que los Wretched den el golpe final a Elites.",en:"If a Wretched's attack takes an enemy Elite out of action: the Wretched is permanently removed from the Roster (not a morale casualty, but erased from the roster). NEVER let Wretched land the killing blow on enemy Elites."}},
+    {title:{es:"Mecánica Goética — Resumen",en:"Goetic Mechanics — Summary"},alert:false,
+     body:{es:"Los hechizos GOÉTICOS no requieren Success Roll. Paga el coste en BM retirados de cualquier modelo en mesa SIN keyword DEMONIC ni BLACK GRAIL (aliado o enemigo, sin LoS ni distancia). El coste puede dividirse entre varios modelos. Cada hechizo puede lanzarse como máximo una vez por Activation del lanzador.",en:"GOETIC spells require no Success Roll. Pay the cost in BM removed from any model on the table WITHOUT the DEMONIC or BLACK GRAIL keyword (friend or foe, no LoS or range restriction). The cost can be split across multiple models. Each spell can be cast at most once per Activation of the caster."}}
+  ]
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   TC ID — reads from URL param ?id=XXXX, falls back to TC_ID const
+   ═══════════════════════════════════════════════════════════════════ */
+const urlId = new URLSearchParams(window.location.search).get('id');
+let activeTcId = urlId || TC_ID;
+let activeTcUrl = `https://trench-companion.com/warband/detail/${activeTcId}`;
+
+function applyTcId() {
+  const input = document.getElementById('tc-id-input');
+  const val = input.value.trim();
+  if (!val || !/^\d+$/.test(val)) { input.focus(); return; }
+  if (val === activeTcId) { syncFromTC(); return; }
+  const url = new URL(window.location.href);
+  url.searchParams.set('id', val);
+  window.location.href = url.toString();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════════ */
+let lang = 'es';
+const state = loadState();
+
+function loadState() {
+  try {
+    return JSON.parse(localStorage.getItem('tc_state_'+TC_ID)) || {bm:{}, checklist:{}, injuries:{}};
+  } catch(e) { return {bm:{}, checklist:{}, injuries:{}}; }
+}
+function saveState() {
+  try { localStorage.setItem('tc_state_'+TC_ID, JSON.stringify(state)); } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LANG
+   ═══════════════════════════════════════════════════════════════════ */
+function t(obj) { return obj[lang] || obj.es || obj.en || ''; }
+
+function toggleLang() {
+  lang = lang === 'es' ? 'en' : 'es';
+  document.getElementById('lang-btn').textContent = lang === 'es' ? 'EN' : 'ES';
+  document.documentElement.lang = lang;
+  // re-render dynamic sections, preserving open card state
+  const openCards = new Set(
+    [...document.querySelectorAll('.unit-card.open')].map(c => c.id.replace('card_',''))
+  );
+  renderWarnings();
+  renderChecklist();
+  renderUnits();
+  renderFaction();
+  openCards.forEach(id => {
+    const card = document.getElementById('card_'+id);
+    if (card) card.classList.add('open');
+  });
+  applyStaticLang();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER HEADER
+   ═══════════════════════════════════════════════════════════════════ */
+function renderHeader() {
+  const m = WARBAND.meta;
+  document.getElementById('hdr-tc-link').href = activeTcUrl;
+  document.getElementById('tc-id-input').value = activeTcId;
+  if (m.tcName) document.getElementById('hdr-name').textContent = m.tcName;
+  const stash = m.tcStash ?? m.stash;
+  const glory = m.tcGlory ?? m.glory;
+  document.getElementById('hdr-stats').innerHTML = `
+    <span class="spill"><strong>${m.rating}D</strong> Rating</span>
+    <span class="spill"><strong>${glory}G</strong> Glory</span>
+    <span class="spill"><strong>${stash}D</strong> Stash</span>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER WARNING BOX
+   ═══════════════════════════════════════════════════════════════════ */
+function renderWarnings() {
+  const seen = new Set();
+  const alerts = [];
+  WARBAND.units.forEach(u => {
+    if (u.status === 'dead' || u.status === 'reserve') return;
+    u.abilities.filter(a => a.alert).forEach(a => {
+      const key = t(a.name);
+      if (seen.has(key)) return;
+      seen.add(key);
+      alerts.push({unit: t(u.name), abl: key, desc: t(a.desc)});
+    });
+  });
+  const title = lang === 'en' ? 'PRE-GAME REMINDERS' : 'RECORDATORIOS PRE-PARTIDA';
+  const html = `
+    <h3 class="gothic">⚠ ${title}</h3>
+    ${alerts.map(a => `<div class="warn-item"><span class="warn-icon">⚠</span><div><strong>${a.unit} — ${a.abl}:</strong> ${a.desc}</div></div>`).join('')}
+  `;
+  document.getElementById('warn-box').innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER CHECKLIST
+   ═══════════════════════════════════════════════════════════════════ */
+function renderChecklist() {
+  const body = document.getElementById('checklist-body');
+  body.innerHTML = WARBAND.preGameChecklist.map(item => {
+    const checked = state.checklist[item.id] ? 'checked' : '';
+    return `<div class="chk-item">
+      <input type="checkbox" id="chk_${item.id}" ${checked} onchange="toggleCheck('${item.id}',this.checked)">
+      <label for="chk_${item.id}">${t(item.label)}</label>
+    </div>`;
+  }).join('');
+}
+
+function toggleCheck(id, val) {
+  state.checklist[id] = val;
+  saveState();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER UNITS
+   ═══════════════════════════════════════════════════════════════════ */
+const typeOrder = ['elite','troop','mercenary','reserve'];
+const typeLabel = {elite:{es:'Elite',en:'Elite'}, troop:{es:'Tropa',en:'Troop'}, mercenary:{es:'Mercenario',en:'Mercenary'}, reserve:{es:'Reserves',en:'Reserves'}};
+
+function renderUnits() {
+  const body = document.getElementById('units-body');
+  let html = '';
+  typeOrder.forEach(type => {
+    const units = WARBAND.units.filter(u => u.type === type && (tcOverlay[u.id]?.status || u.status) !== 'dead');
+    if (!units.length) return;
+    html += `<div class="grp-hdr">${typeLabel[type].es} / ${typeLabel[type].en}</div>`;
+    units.forEach(u => { html += renderUnitCard(u); });
+  });
+  body.innerHTML = html;
+  // attach BM pip listeners
+  WARBAND.units.forEach(u => { if (u.status !== 'dead') attachBmListeners(u.id); });
+}
+
+function renderUnitCard(u) {
+  const ov = tcOverlay[u.id] || {};
+  const effectiveStatus = ov.status || u.status;
+  const effectiveCost   = ov.cost   || u.cost;
+  const xp = ov.xp || 0;
+  const scars = ov.battleScars || 0;
+  const allInjuries = [...u.injuries, ...(ov.extraInjuries || [])];
+  const bm = state.bm[u.id] || 0;
+  const hasInj = allInjuries.length > 0;
+  const typeCls = {elite:'t-elite',troop:'t-troop',mercenary:'t-merc',reserve:'t-reserve'}[u.type];
+  const nameCls = effectiveStatus === 'dead' ? 'uname dead' : 'uname';
+
+  const xpBadge = xp > 0 ? `<span class="xp-badge" title="XP / Battle Scars">${xp}XP${scars > 0 ? ` ✦${scars}` : ''}</span>` : '';
+  return `<div class="unit-card" id="card_${u.id}">
+  <div class="unit-hdr" onclick="toggleCard('${u.id}')">
+    <span class="tbadge ${typeCls}">${typeLabel[u.type].es}</span>
+    <span class="${nameCls}">${t(u.name)}</span>
+    <span class="ucost">${effectiveCost}</span>
+    ${xpBadge}
+    <div class="uqs">
+      <div class="uq"><span class="uq-lbl">MOV</span>${u.move}</div>
+      <div class="uq"><span class="uq-lbl">MEL</span>${u.melee}</div>
+      <div class="uq"><span class="uq-lbl">RNG</span>${u.ranged}</div>
+      <div class="uq"><span class="uq-lbl">ARM</span>${u.armour}</div>
+    </div>
+    <span class="inj-dot ${hasInj ? 'on' : ''}" title="Heridas activas"></span>
+    <span class="bm-mini ${bm > 0 ? 'on' : ''}" id="bmini_${u.id}">${bm > 0 ? bm+'BM' : ''}</span>
+    <span class="chv-u">▼</span>
+  </div>
+  <div class="unit-body">
+    ${renderStats(u)}
+    ${renderKeywords(u)}
+    ${renderWeapons(u)}
+    ${renderAbilities(u, ov.extraAdvs || [])}
+    ${renderInjuries(u, allInjuries)}
+    ${renderBmCounter(u)}
+    ${u.tactics ? `<div class="tactics">📋 ${t(u.tactics)}</div>` : ''}
+  </div>
+</div>`;
+}
+
+function renderStats(u) {
+  return `<div class="stats-row">
+    <div class="sbox"><span class="sval">${u.move}</span><span class="slbl">Move</span></div>
+    <div class="sbox"><span class="sval">${u.melee}</span><span class="slbl">Melee</span></div>
+    <div class="sbox"><span class="sval">${u.ranged}</span><span class="slbl">Ranged</span></div>
+    <div class="sbox"><span class="sval">${u.armour}</span><span class="slbl">Armour</span></div>
+  </div>`;
+}
+
+function renderKeywords(u) {
+  if (!u.keywords || !u.keywords.length) return '';
+  const warnKws = ['Infiltrator','Hateful','Law of Hell','Tough','Leader','Strong'];
+  return `<div class="kws">${u.keywords.map(k => `<span class="kw ${warnKws.includes(k)?'kw-w':''}">${k}</span>`).join('')}</div>`;
+}
+
+function renderWeapons(u) {
+  if (!u.weapons || !u.weapons.length) return '';
+  return `<div class="blk-title">${lang==='en'?'Weapons':'Armamento'}</div>` +
+    u.weapons.map(w => `<div class="weap-card">
+      <div class="weap-hdr">
+        <span class="weap-name">${t(w.name)}</span>
+        ${w.range ? `<span class="wstat">📏 ${w.range}</span>` : ''}
+        ${w.hands ? `<span class="wstat">${w.hands}</span>` : ''}
+      </div>
+      <div class="weap-rule">${t(w.rule)}</div>
+    </div>`).join('');
+}
+
+function renderAbilities(u, extraAdvs = []) {
+  const advBadges = extraAdvs.length
+    ? `<div style="margin-bottom:5px">${extraAdvs.map(a => `<span class="adv-badge"><span class="adv-name">⚡ ${a}</span><span class="adv-desc">TC</span></span>`).join('')}</div>`
+    : '';
+  if (!u.abilities || !u.abilities.length) return advBadges ? `<div class="blk-title">${lang==='en'?'Abilities':'Habilidades'}</div>${advBadges}` : '';
+  return `<div class="blk-title">${lang==='en'?'Abilities':'Habilidades'}</div>${advBadges}` +
+    u.abilities.map(a => {
+      const cls = a.goetic ? 'goetic' : (a.alert ? 'alert' : '');
+      return `<div class="abl-card ${cls}">
+        <div class="abl-hdr">
+          ${a.goetic ? '<span style="font-size:10px">🔮</span>' : ''}
+          ${a.alert ? '<span style="font-size:10px">⚠</span>' : ''}
+          <span class="abl-name">${t(a.name)}</span>
+          ${a.cost ? `<span class="gcost">GOETIC ${a.cost}</span>` : ''}
+        </div>
+        <div class="abl-desc">${t(a.desc)}</div>
+      </div>`;
+    }).join('');
+}
+
+function renderInjuries(u, allInjuries) {
+  const injuries = allInjuries || u.injuries;
+  if (!injuries || !injuries.length) return '';
+  const html = injuries.map((inj, i) => {
+    const injId = `${u.id}_${i}`;
+    const resolved = state.injuries[injId] || false;
+    return `<div class="inj-badge">
+      <input type="checkbox" title="Marcar como resuelta" ${resolved?'checked':''} onchange="toggleInjury('${injId}',this.checked)">
+      <div>
+        <div class="inj-name">${t(inj.name)}</div>
+        <div class="inj-eff">${t(inj.effect)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="blk-title">${lang==='en'?'Injuries':'Heridas'}</div><div class="injury-list">${html}</div>`;
+}
+
+function renderBmCounter(u) {
+  const bm = state.bm[u.id] || 0;
+  const maxPips = 8;
+  const pips = Array.from({length: maxPips}, (_, i) =>
+    `<div class="bm-pip ${i < bm ? 'filled' : ''}" id="pip_${u.id}_${i}" onclick="setPip('${u.id}',${i})"></div>`
+  ).join('');
+  return `<div class="bm-ctr">
+    <span class="bm-lbl">BM</span>
+    <button class="bm-btn" onclick="changeBm('${u.id}',-1)">−</button>
+    <div class="bm-pips">${pips}</div>
+    <button class="bm-btn" onclick="changeBm('${u.id}',1)">+</button>
+    <span class="bm-count" id="bmcount_${u.id}">${bm}</span>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER FACTION
+   ═══════════════════════════════════════════════════════════════════ */
+function renderFaction() {
+  const body = document.getElementById('faction-body');
+  body.innerHTML = WARBAND.factionRules.map(r => `
+    <div class="abl-card ${r.alert ? 'alert' : ''}">
+      <div class="abl-hdr">${r.alert ? '<span>⚠</span>' : ''}<span class="abl-name">${t(r.title)}</span></div>
+      <div class="abl-desc">${t(r.body)}</div>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INTERACTIVITY
+   ═══════════════════════════════════════════════════════════════════ */
+function toggleCard(id) {
+  const card = document.getElementById('card_'+id);
+  card.classList.toggle('open');
+}
+
+function toggleSec(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+function toggleInjury(id, val) {
+  state.injuries[id] = val;
+  saveState();
+}
+
+function changeBm(id, delta) {
+  const cur = state.bm[id] || 0;
+  const newVal = Math.max(0, cur + delta);
+  updateBm(id, newVal);
+}
+
+function setPip(unitId, idx) {
+  const cur = state.bm[unitId] || 0;
+  const newVal = cur === idx + 1 ? idx : idx + 1;
+  updateBm(unitId, newVal);
+}
+
+function updateBm(id, val) {
+  state.bm[id] = val;
+  saveState();
+  const maxPips = 8;
+  for (let i = 0; i < maxPips; i++) {
+    const pip = document.getElementById(`pip_${id}_${i}`);
+    if (pip) pip.classList.toggle('filled', i < val);
+  }
+  const cnt = document.getElementById('bmcount_'+id);
+  if (cnt) cnt.textContent = val;
+  const mini = document.getElementById('bmini_'+id);
+  if (mini) {
+    mini.textContent = val > 0 ? val+'BM' : '';
+    mini.classList.toggle('on', val > 0);
+  }
+}
+
+function attachBmListeners(id) {
+  // pips are rendered with inline onclick, no extra listeners needed
+}
+
+function resetGame() {
+  if (!confirm('¿Resetear todos los BM y el checklist?')) return;
+  state.bm = {}; state.checklist = {};
+  saveState();
+  renderChecklist();
+  renderUnits();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TC LIVE SYNC  — uses synod.trench-companion.com JSON API directly
+   Overlay: keyed by WARBAND unit id — never mutates WARBAND directly
+   ═══════════════════════════════════════════════════════════════════ */
+const TC_API = "https://synod.trench-companion.com/wp-json/synod/v1/multi-dataset";
+const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const tcOverlay = {};
+
+function injuryName(id) {
+  const map = {
+    in_darkmemory:'Dark Memory', in_captured:'Captured', in_minorwound:'Minor Wound',
+    in_shellshocked:'Shell Shocked', in_bravado:'Bravado', in_grievouswound:'Grievous Wound',
+    in_lostfinger:'Lost Finger', in_losttoe:'Lost Toe', in_oldwound:'Old Wound',
+    in_nervedamage:'Nerve Damage', in_fallenheroes:'Fallen Heroes', in_madness:'Madness',
+    in_hobbled:'Hobbled', in_blinded:'Blinded', in_deafened:'Deafened',
+    in_multiplescars:'Multiple Scars', in_headwound:'Head Wound'
+  };
+  return map[id] || id.replace(/^in_/, '').replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase());
+}
+
+function skillName(id) {
+  const map = {
+    sk_scavenger:'Scavenger', sk_sharpeyes:'Sharp Eyes', sk_quickstep:'Quick Step',
+    sk_resilient:'Resilient', sk_berserk:'Berserk', sk_toughness:'Toughness',
+    sk_ironwill:'Iron Will', sk_deadshot:'Dead Shot', sk_marksman:'Marksman',
+    sk_infiltrator:'Infiltrator', sk_leader:'Leader', sk_tactician:'Tactician',
+    sk_ironjaw:'Iron Jaw', sk_sprint:'Sprint', sk_heavyblow:'Heavy Blow'
+  };
+  return map[id] || id.replace(/^sk_/, '').replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase());
+}
+
+async function syncFromTC() {
+  try {
+    const apiUrl = `${TC_API}?warbands=${activeTcId}`;
+    const needsProxy = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    let res;
+    if (!needsProxy) res = await fetch(apiUrl).catch(() => null);
+    if (!res || !res.ok) res = await fetch(CORS_PROXY + encodeURIComponent(apiUrl)).catch(() => null);
+    if (!res || !res.ok) return;
+    const data = await res.json();
+    const wbRaw = data.warbands?.[activeTcId]?.warband_data;
+    if (!wbRaw) return;
+    const wb = typeof wbRaw === 'string' ? JSON.parse(wbRaw) : wbRaw;
+
+    // ── Warband metadata ──────────────────────────────────────────
+    if (wb.name) WARBAND.meta.tcName = wb.name;
+    WARBAND.meta.tcStash = wb.ducat_bank ?? WARBAND.meta.stash;
+    WARBAND.meta.tcGlory = wb.glory_bank ?? WARBAND.meta.glory;
+    renderHeader();
+
+    // ── Match models to WARBAND units (by name, in order) ────────
+    const seenKey = {};
+    (wb.models || []).forEach(m => {
+      const mo = m.model;
+      const tcName = mo.name.toLowerCase();
+      seenKey[tcName] = seenKey[tcName] || 0;
+
+      const candidates = WARBAND.units.filter(u => {
+        const uName = (u.name[lang] || u.name.es || '').toLowerCase();
+        return uName.includes(tcName) || tcName.includes(uName.split(' ')[0]);
+      });
+      const unit = candidates[seenKey[tcName]];
+      seenKey[tcName]++;
+      if (!unit) return;
+
+      const tcStatus = mo.active; // "active" | "reserved" | "dead"
+      const xp = mo.experience || 0;
+      const injList = [].concat(mo.list_injury || []);
+      const sklList = [].concat(mo.list_skills || []);
+
+      // Extra injuries not already in WARBAND data (match by display name)
+      const wbInjNames = new Set(unit.injuries.map(i => (i.name.en || i.name.es).toLowerCase()));
+      const extraInjuries = injList.map(inj => {
+        const name = injuryName(inj.object_id);
+        if (wbInjNames.has(name.toLowerCase())) return null;
+        return { name:{es:name, en:name}, effect:{es:'ver Trench Companion', en:'see Trench Companion'} };
+      }).filter(Boolean);
+
+      // Extra advancements not already listed as abilities
+      const wbAblNames = new Set(unit.abilities.map(a => (a.name.en || a.name.es).toLowerCase()));
+      const extraAdvs = sklList
+        .map(s => skillName(s.object_id))
+        .filter(name => !wbAblNames.has(name.toLowerCase()));
+
+      tcOverlay[unit.id] = {
+        status: tcStatus === 'dead' ? 'dead' : tcStatus === 'reserved' ? 'reserve' : 'active',
+        xp,
+        extraInjuries,
+        extraAdvs
+      };
+    });
+
+    renderUnits();
+    document.getElementById('sync-badge').style.display = 'inline';
+  } catch(e) {
+    // silent fail — offline or API unavailable
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════════ */
+function applyStaticLang() {
+  document.querySelectorAll('[data-es]').forEach(el => {
+    el.textContent = el.getAttribute('data-' + lang) || el.getAttribute('data-es');
+  });
+}
+
+function init() {
+  renderHeader();
+  renderWarnings();
+  renderChecklist();
+  renderUnits();
+  renderFaction();
+  applyStaticLang();
+  syncFromTC();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
