@@ -171,6 +171,11 @@ button{font-family:inherit;cursor:pointer}
   .uqs{display:none}
   .wband-name{font-size:18px}
 }
+#loading-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#loading-overlay .lo-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent-br);border-radius:50%;animation:spin 0.9s linear infinite}
+#loading-overlay .lo-title{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);letter-spacing:3px}
+#loading-overlay .lo-sub{font-size:12px;color:var(--dim)}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -954,11 +959,14 @@ function renderUnitCard(u) {
 }
 
 function renderStats(u) {
+  const lbl = lang === 'en'
+    ? {move:'Move', melee:'Melee', ranged:'Ranged', armour:'Armour'}
+    : {move:'Mov', melee:'C.a.C.', ranged:'Distancia', armour:'Armadura'};
   return `<div class="stats-row">
-    <div class="sbox"><span class="sval">${u.move}</span><span class="slbl">Move</span></div>
-    <div class="sbox"><span class="sval">${u.melee}</span><span class="slbl">Melee</span></div>
-    <div class="sbox"><span class="sval">${u.ranged}</span><span class="slbl">Ranged</span></div>
-    <div class="sbox"><span class="sval">${u.armour}</span><span class="slbl">Armour</span></div>
+    <div class="sbox"><span class="sval">${u.move}</span><span class="slbl">${lbl.move}</span></div>
+    <div class="sbox"><span class="sval">${u.melee}</span><span class="slbl">${lbl.melee}</span></div>
+    <div class="sbox"><span class="sval">${u.ranged}</span><span class="slbl">${lbl.ranged}</span></div>
+    <div class="sbox"><span class="sval">${u.armour}</span><span class="slbl">${lbl.armour}</span></div>
   </div>`;
 }
 
@@ -1020,7 +1028,8 @@ function renderInjuries(u, allInjuries) {
 
 function renderTcEquipment(items) {
   if (!items || !items.length) return '';
-  return `<div class="blk-title">Equipment (TC Live)</div>
+  const title = lang === 'en' ? 'Equipment (TC Live)' : 'Equipo (TC Live)';
+  return `<div class="blk-title">${title}</div>
   <div class="kws">${items.map(e => `<span class="kw">${e}</span>`).join('')}</div>`;
 }
 
@@ -1287,6 +1296,11 @@ const FACTION_NAMES = {
   'fc_courtofthesevenserpent':                                   'Court of the Seven-Headed Serpent',
 };
 
+function hideLoading() {
+  const ov = document.getElementById('loading-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
 async function syncFromTC() {
   const badge = document.getElementById('sync-badge');
   badge.textContent = '⏳'; badge.style.display = 'inline';
@@ -1299,11 +1313,11 @@ async function syncFromTC() {
       if (res && res.ok) break;
       res = await fetch(proxy + encodeURIComponent(apiUrl)).catch(() => null);
     }
-    if (!res || !res.ok) { badge.textContent = '⚠ Offline'; return; }
+    if (!res || !res.ok) { hideLoading(); badge.textContent = '⚠ Offline'; return; }
 
     const data = await res.json();
     const wbRaw = data.warbands?.[activeTcId]?.warband_data;
-    if (!wbRaw) { badge.textContent = '⚠ No data'; return; }
+    if (!wbRaw) { hideLoading(); badge.textContent = '⚠ No data'; return; }
     const wb = typeof wbRaw === 'string' ? JSON.parse(wbRaw) : wbRaw;
 
     // Warband metadata
@@ -1346,9 +1360,13 @@ async function syncFromTC() {
     renderWarnings();
     renderChecklist();
     renderUnits();
+    renderFaction();
+    applyStaticLang();
+    hideLoading();
     badge.textContent = `⚡ ${newRoster.filter(u => u.status !== 'dead').length} models`;
   } catch(e) {
     console.error('[TC Sync]', e);
+    hideLoading();
     badge.textContent = '⚠ Error';
     badge.style.display = 'inline';
   }
@@ -1364,16 +1382,28 @@ function applyStaticLang() {
 }
 
 function init() {
-  renderHeader();
-  renderWarnings();
-  renderChecklist();
-  renderUnits();
-  renderFaction();
-  applyStaticLang();
+  const urlId = new URLSearchParams(location.search).get('id');
+  const needsFreshSync = urlId && urlId !== String(TC_ID);
+
+  if (!needsFreshSync) {
+    renderHeader(); renderWarnings(); renderChecklist();
+    renderUnits(); renderFaction(); applyStaticLang();
+    hideLoading();
+  } else {
+    const msg = document.getElementById('lo-msg');
+    if (msg) msg.textContent = lang === 'en'
+      ? `Loading warband ${urlId}…`
+      : `Cargando banda ${urlId}…`;
+  }
   syncFromTC();
 }
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+<div id="loading-overlay">
+  <div class="lo-spinner"></div>
+  <div class="lo-title">TRENCH CRUSADE</div>
+  <div class="lo-sub" id="lo-msg">Cargando banda…</div>
+</div>
 </body>
 </html>
