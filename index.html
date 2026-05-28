@@ -189,6 +189,16 @@ button{font-family:inherit;cursor:pointer}
 .wb-card-stats{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--text)}
 .wb-card-stat{background:var(--kw);border:1px solid var(--border);padding:1px 6px;border-radius:8px}
 .wb-card-alert{border-left:3px solid var(--accent-br)}
+.wb-card-faction{font-size:10px;color:var(--dim);margin-bottom:6px}
+.wb-alert{color:var(--gold);border-color:var(--accent)}
+.roll-btn{font-size:10px;padding:2px 6px;margin:0 2px;border-radius:2px;background:var(--kw);border:1px solid var(--border);color:var(--text);cursor:pointer}
+.roll-btn.roll-hit{background:#5a1a1a;border-color:#c0332a;color:#ff8888}
+.roll-btn.roll-clear{background:#1a3a1a;border-color:#339933;color:#88cc88}
+.roll-zone{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;flex-wrap:wrap}
+.sbox.penalized .sval{color:#e05a30;text-decoration:line-through}
+.sbox.penalized::after{content:'-1D';font-size:9px;color:#e05a30;display:block}
+.unit-card.starts-down{border-left:3px solid #e05a30}
+.unit-card.starts-down .uname::after{content:' [DOWN]';color:#e05a30;font-size:10px}
 </style>
 </head>
 <body>
@@ -840,11 +850,11 @@ const state = loadState();
 
 function loadState() {
   try {
-    return JSON.parse(localStorage.getItem('tc_state_'+TC_ID)) || {bm:{}, checklist:{}, injuries:{}};
-  } catch(e) { return {bm:{}, checklist:{}, injuries:{}}; }
+    return JSON.parse(localStorage.getItem('tc_state_'+activeTcId)) || {bm:{}, checklist:{}, injuries:{}, pregameRolls:{}};
+  } catch(e) { return {bm:{}, checklist:{}, injuries:{}, pregameRolls:{}}; }
 }
 function saveState() {
-  try { localStorage.setItem('tc_state_'+TC_ID, JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem('tc_state_'+activeTcId, JSON.stringify(state)); } catch(e) {}
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -927,14 +937,45 @@ function renderWarnings() {
    ═══════════════════════════════════════════════════════════════════ */
 function renderChecklist() {
   const body = document.getElementById('checklist-body');
-  const items = generateChecklist(tcRoster || WARBAND.units);
+  const roster = tcRoster || WARBAND.units;
+  const items = generateChecklist(roster);
   body.innerHTML = items.map(item => {
+    if (item.id === 'shell') {
+      const affected = roster.filter(u => _isActive(u) && u.type === 'elite' && _hasInjury(u, 'Shell Shocked'));
+      return renderRollChecklist(item, affected, 'shell');
+    }
+    if (item.id === 'old_wound') {
+      const affected = roster.filter(u => u.status !== 'dead' && _hasInjury(u, 'Old Wound'));
+      return renderRollChecklist(item, affected, 'oldwound');
+    }
     const checked = state.checklist[item.id] ? 'checked' : '';
     return `<div class="chk-item">
       <input type="checkbox" id="chk_${item.id}" ${checked} onchange="toggleCheck('${item.id}',this.checked)">
       <label for="chk_${item.id}">${t(item.label)}</label>
     </div>`;
   }).join('');
+}
+
+function renderRollChecklist(item, affectedUnits, rollType) {
+  const zones = affectedUnits.map(u => {
+    const rs = (state.pregameRolls || {})[u.id]?.[rollType] || null;
+    const hitBtn   = `<button class="roll-btn${rs==='hit'?' roll-hit':''}" onclick="recordRoll('${u.id}','${rollType}',true)">1-2 ✗</button>`;
+    const clearBtn = `<button class="roll-btn${rs==='clear'?' roll-clear':''}" onclick="recordRoll('${u.id}','${rollType}',false)">3-6 ✓</button>`;
+    return `<div class="roll-zone"><strong>${t(u.name)}</strong>: ${hitBtn}${clearBtn}</div>`;
+  }).join('');
+  return `<div class="chk-item" style="flex-direction:column;align-items:flex-start;gap:2px">
+    <label style="font-weight:600">${t(item.label)}</label>
+    ${zones}
+  </div>`;
+}
+
+function recordRoll(unitId, type, hit) {
+  if (!state.pregameRolls) state.pregameRolls = {};
+  if (!state.pregameRolls[unitId]) state.pregameRolls[unitId] = {};
+  state.pregameRolls[unitId][type] = hit ? 'hit' : 'clear';
+  saveState();
+  renderChecklist();
+  renderUnits();
 }
 
 function toggleCheck(id, val) {
@@ -975,9 +1016,11 @@ function renderUnitCard(u) {
   const hasInj = allInjuries.length > 0;
   const typeCls = {elite:'t-elite',troop:'t-troop',mercenary:'t-merc',reserve:'t-reserve'}[u.type];
   const nameCls = effectiveStatus === 'dead' ? 'uname dead' : 'uname';
+  const rolls = (state.pregameRolls || {})[u.id] || {};
+  const startsDown = rolls.oldwound === 'hit';
 
   const xpBadge = xp > 0 ? `<span class="xp-badge" title="XP / Battle Scars">${xp}XP${scars > 0 ? ` ✦${scars}` : ''}</span>` : '';
-  return `<div class="unit-card" id="card_${u.id}">
+  return `<div class="unit-card${startsDown ? ' starts-down' : ''}" id="card_${u.id}">
   <div class="unit-hdr" onclick="toggleCard('${u.id}')">
     <span class="tbadge ${typeCls}">${typeLabel[u.type].es}</span>
     <span class="${nameCls}">${t(u.name)}</span>
@@ -1007,14 +1050,17 @@ function renderUnitCard(u) {
 }
 
 function renderStats(u) {
+  const rolls = (state.pregameRolls || {})[u.id] || {};
+  const penalized = rolls.shell === 'hit';
   const lbl = lang === 'en'
     ? {move:'Move', melee:'Melee', ranged:'Ranged', armour:'Armour'}
     : {move:'Mov', melee:'C.a.C.', ranged:'Distancia', armour:'Armadura'};
+  const pc = penalized ? ' penalized' : '';
   return `<div class="stats-row">
-    <div class="sbox"><span class="sval">${u.move}</span><span class="slbl">${lbl.move}</span></div>
-    <div class="sbox"><span class="sval">${u.melee}</span><span class="slbl">${lbl.melee}</span></div>
-    <div class="sbox"><span class="sval">${u.ranged}</span><span class="slbl">${lbl.ranged}</span></div>
-    <div class="sbox"><span class="sval">${u.armour}</span><span class="slbl">${lbl.armour}</span></div>
+    <div class="sbox${pc}"><span class="sval">${u.move}</span><span class="slbl">${lbl.move}</span></div>
+    <div class="sbox${pc}"><span class="sval">${u.melee}</span><span class="slbl">${lbl.melee}</span></div>
+    <div class="sbox${pc}"><span class="sval">${u.ranged}</span><span class="slbl">${lbl.ranged}</span></div>
+    <div class="sbox${pc}"><span class="sval">${u.armour}</span><span class="slbl">${lbl.armour}</span></div>
   </div>`;
 }
 
@@ -1160,8 +1206,8 @@ function attachBmListeners(id) {
 }
 
 function resetGame() {
-  if (!confirm('¿Resetear todos los BM y el checklist?')) return;
-  state.bm = {}; state.checklist = {};
+  if (!confirm('¿Resetear todos los BM, checklist y tiradas pre-partida?')) return;
+  state.bm = {}; state.checklist = {}; state.pregameRolls = {};
   saveState();
   renderChecklist();
   renderUnits();
@@ -1280,6 +1326,26 @@ function skillName(id) {
     .replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+const CAMPAIGN_WARBANDS = [
+  { id: 183662, name: 'Smoking Lust',               faction: 'Court of the Seven-Headed Serpent', vp: 23,
+    alerts: ['Sorcerer: Dark Memory + Capturado', 'Praetor: Reserva (Minor Wound)', 'Pit Locust Elite: Shell Shocked 🎲'] },
+  { id: 211332, name: 'Hijos de Astaroth',           faction: 'Court of the Seven-Headed Serpent', vp: 12, alerts: [] },
+  { id: 184341, name: 'La séptima llama',             faction: 'Heretic Legion',                    vp: 45, alerts: ['1 tropa muerta'] },
+  { id: 279574, name: 'Cofradía del Útero Negro',    faction: 'Cult of the Black Grail',            vp: 40,
+    alerts: ['2 Grail Thralls muertos', 'Chest Wound (Herald)', 'Bitter Lessons (Plague Knight)'] },
+  { id: 172761, name: 'Orden de San Lazaro',          faction: 'Procession of the Sacred Affliction',vp: 29,
+    alerts: ['War Prophet: MUERTO', 'Communicant: Reserva (Minor Wound)', 'Stigmatic Nun: Infiltrator'] },
+  { id: 214779, name: 'Los caídos perdidos',          faction: 'New Antioch',                       vp: 23,
+    alerts: ['Sniper Priest: Paranoia', 'Yeoman: Infiltrator'] },
+  { id: 168654, name: 'Exactores Mammonis',           faction: 'Knights of Avarice',                vp: 21, alerts: [] },
+  { id: 176860, name: 'LOS DESQUICIADOS',             faction: 'Red Brigade',                       vp: 21,
+    alerts: ['Trench Cleric: Chest Wound + Muscle Damage', 'Yeoman: Infiltrator'] },
+  { id: 223915, name: 'Kampfgrouppe Maximilian wolf', faction: 'Stoßtruppen of Prussia',            vp: 10,
+    alerts: ['Trench Cleric: Dark Memory 🎲'] },
+  { id: 214074, name: 'DI DIFINSORES DI ALLAH',       faction: 'Iron Sultanate',                    vp: 7,
+    alerts: ['Jabiran Alchemist: Hand Wound', '2 Janissaries muertos'] },
+];
+
 const FACTION_NAMES = {
   // Confirmed from lFdM 2026 campaign API
   'fc_courtofthesevenheadedserpent':                            'Court of the Seven-Headed Serpent',
@@ -1302,19 +1368,13 @@ function renderCampaignView(wbList) {
   const grid = document.getElementById('camp-grid');
   if (!wbList || !wbList.length) { grid.textContent = '⚠ Sin datos'; return; }
   grid.innerHTML = wbList.map(wb => {
-    const id = wb['warband-id'];
-    const name = wb['warband-name'] || `Warband ${id}`;
-    const models = wb.models || [];
-    const alive = models.filter(m => (m.status || m['model-status'] || 'active') !== 'dead');
-    const injured = models.filter(m => (m.injuries||[]).length > 0);
-    const hasAlert = injured.length > 0;
-    const ducats = wb['ducat-rating'] || 0;
-    return `<div class="wb-card${hasAlert?' wb-card-alert':''}" onclick="selectWarband('${id}')">
-      <div class="wb-card-name">${name}</div>
+    const hasAlert = wb.alerts && wb.alerts.length > 0;
+    return `<div class="wb-card${hasAlert?' wb-card-alert':''}" onclick="selectWarband('${wb.id}')">
+      <div class="wb-card-name">${wb.name}</div>
+      <div class="wb-card-faction">${wb.faction}</div>
       <div class="wb-card-stats">
-        <span class="wb-card-stat">⚔ ${alive.length}</span>
-        <span class="wb-card-stat">${ducats}D</span>
-        ${hasAlert ? `<span class="wb-card-stat" style="color:var(--gold)">⚠ ${injured.length} herida${injured.length>1?'s':''}</span>` : ''}
+        <span class="wb-card-stat">⚔ ${wb.vp} VP</span>
+        ${(wb.alerts||[]).map(a => `<span class="wb-card-stat wb-alert">⚠ ${a}</span>`).join('')}
       </div>
     </div>`;
   }).join('');
@@ -1326,21 +1386,10 @@ function selectWarband(id) {
   window.location.href = url.toString();
 }
 
-async function loadCampaign() {
-  const msg = document.getElementById('lo-msg');
-  if (msg) msg.textContent = lang === 'en' ? 'Loading campaign…' : 'Cargando campaña…';
-  const res = await fetchWithProxies(TC_CAMPAIGN_API);
+function loadCampaign() {
+  campaignData = CAMPAIGN_WARBANDS;
+  renderCampaignView(CAMPAIGN_WARBANDS);
   hideLoading();
-  if (!res) { document.getElementById('camp-grid').textContent = '⚠ Sin conexión'; return; }
-  try {
-    const data = await res.json();
-    const wbList = Array.isArray(data) ? data : (data.warbands || data.data || []);
-    campaignData = wbList;
-    renderCampaignView(wbList);
-  } catch(e) {
-    console.error('[Campaign]', e);
-    document.getElementById('camp-grid').textContent = '⚠ Error al cargar';
-  }
 }
 
 function hideLoading() {
@@ -1348,51 +1397,52 @@ function hideLoading() {
   if (ov) ov.style.display = 'none';
 }
 
-function buildUnitFromTts(mo) {
-  const keywordIds    = (mo.keywords||[]).map(k => k['keyword-id']).filter(Boolean);
-  const keywordNames  = (mo.keywords||[]).map(k => k['keyword-name']).filter(Boolean);
-  const abilityIds    = (mo.abilities||[]).map(a => a['ability-id']).filter(Boolean);
-  const upgradeIds    = (mo.upgrades||[]).map(u => u['upgrade-id']).filter(Boolean);
-  const advancementIds= (mo.advancements||[]).map(a => a['advancement-id']).filter(Boolean);
-  const tcEquipment   = (mo.equipment||[]).map(e => e['equipment-name']).filter(Boolean);
-  const isElite = keywordIds.includes('kw_elite');
-  const moveRaw = mo['stat-move'] || '?';
-  const move = moveRaw.includes('/') ? moveRaw.split('/')[0] : moveRaw;
-  const status = mo.status || mo['model-status'] || 'active';
-
-  const injuries = (mo.injuries||[]).map(inj => {
-    const id = inj['injury-id'] || '';
-    const name = injuryName(id);
-    return { name:{es:name, en:name}, effect:{es:'ver TC', en:'see TC'}, injuryId: id };
-  });
-
-  // Overlay rich static text (abilities, weapons, tactics) when model type matches
-  const mdType = mo['model-id'];
+function buildUnitFromTc(mo) {
+  const mdType = mo.model;
+  const status = mo.active === 'dead' ? 'dead' : mo.active === 'reserved' ? 'reserve' : 'active';
+  const cmp = TC_COMPENDIUM[mdType] || null;
   const staticUnit = TC_MODEL_TO_ID[mdType]
     ? WARBAND.units.find(u => u.id === TC_MODEL_TO_ID[mdType])
     : null;
 
+  const upgradeIds  = (mo.list_upgrades || []).map(u => u.object_id).filter(Boolean);
+  const tcEquipment = (mo.equipment     || []).map(e => e.equipment && e.equipment.name).filter(Boolean);
+  const keywordIds  = (cmp?.keywords || staticUnit?.keywords || []).map(k =>
+    'kw_' + k.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
+  const abilityIds  = (staticUnit?.abilities || []).map(a => {
+    const name = (a.name.en || a.name.es || '').toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    return 'ab_' + name;
+  });
+  const isElite = mo.elite || (cmp?.type === 'elite') || (staticUnit?.type === 'elite');
+
+  const injuries = (mo.list_injury || []).map(inj => {
+    const id = inj.object_id;
+    const name = injuryName(id);
+    const staticInj = staticUnit?.injuries?.find(i =>
+      (i.name.en||i.name.es||'').toLowerCase() === name.toLowerCase());
+    return staticInj || { name:{es:name,en:name}, effect:{es:'ver TC',en:'see TC'}, injuryId: id };
+  });
+
   return {
-    id: `${mdType}_${(mo.name||'').replace(/\s+/g,'_').toLowerCase()}`,
-    modelId: mdType,
-    name: { es: mo.name, en: mo.name },
-    modelName: mo['model-name'],
-    type: isElite ? 'elite' : 'troop',
+    id: `${mdType}_${(mo.name||mo.model_name||mdType).replace(/\s+/g,'_').toLowerCase()}`,
+    modelId:   mdType,
+    name:      { es: mo.name||mo.model_name||mdType, en: mo.name||mo.model_name||mdType },
+    modelName: mo.model_name || mdType,
+    type:      isElite ? 'elite' : 'troop',
     status,
-    move,
-    melee:  mo['stat-melee']  || '?',
-    ranged: mo['stat-ranged'] || '?',
-    armour: mo['stat-armour'] || '?',
-    keywords: keywordNames,
+    move:      staticUnit?.move   || cmp?.move   || '?',
+    melee:     staticUnit?.melee  || cmp?.melee  || '?',
+    ranged:    staticUnit?.ranged || cmp?.ranged || '?',
+    armour:    staticUnit?.armour || cmp?.armour || '?',
+    keywords:  staticUnit?.keywords || cmp?.keywords || [],
     keywordIds,
     abilityIds,
     upgradeIds,
-    advancementIds,
     abilities: staticUnit?.abilities || [],
     weapons:   staticUnit?.weapons   || [],
     injuries,
-    tactics: staticUnit?.tactics || null,
-    cost: mo.cost?.ducats ? `${mo.cost.ducats}D` : '?D',
+    tactics:   staticUnit?.tactics || null,
+    cost:      mo.cost ? `${mo.cost}D` : '?D',
     tcEquipment,
   };
 }
@@ -1410,21 +1460,21 @@ async function syncFromTC() {
   const badge = document.getElementById('sync-badge');
   badge.textContent = '⏳'; badge.style.display = 'inline';
   try {
-    // Fetch TTS JSON from campaign endpoint (confirmed in browser console)
-    const res = await fetchWithProxies(TC_CAMPAIGN_API);
+    const apiUrl = `https://synod.trench-companion.com/wp-json/synod/v1/multi-dataset?warbands=${activeTcId}`;
+    const res = await fetchWithProxies(apiUrl);
     if (!res) { hideLoading(); badge.textContent = '⚠ Offline'; return; }
 
     const data = await res.json();
-    // Campaign endpoint returns an array of warband objects
-    const wbList = Array.isArray(data) ? data : (data.warbands || data.data || []);
-    const wb = wbList.find(w => String(w['warband-id']) === String(activeTcId));
+    const wbRaw = data.warbands?.[activeTcId]?.warband_data;
+    const wb = typeof wbRaw === 'string' ? JSON.parse(wbRaw) : wbRaw;
     if (!wb) { hideLoading(); badge.textContent = '⚠ No data'; return; }
 
-    WARBAND.meta.tcName  = wb['warband-name'] || WARBAND.meta.tcName;
-    WARBAND.meta.tcStash = wb['ducat-bank']   ?? WARBAND.meta.stash;
-    WARBAND.meta.tcGlory = wb['glory-bank']   ?? WARBAND.meta.glory;
+    WARBAND.meta.tcName  = wb.name       || WARBAND.meta.tcName;
+    WARBAND.meta.tcStash = wb.ducat_bank ?? wb.ducats ?? WARBAND.meta.stash;
+    WARBAND.meta.tcGlory = wb.glory_bank ?? wb.glory  ?? WARBAND.meta.glory;
+    if (wb.faction) WARBAND.meta.tcFaction = FACTION_NAMES[wb.faction] || wb.faction;
 
-    const newRoster = (wb.models || []).map(mo => buildUnitFromTts(mo));
+    const newRoster = (wb.models || []).map(m => buildUnitFromTc(m.model || m));
 
     tcRoster = newRoster;
     renderHeader();
