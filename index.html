@@ -634,10 +634,23 @@ const _isActive   = u => u.status === 'active';
 const CHECKLIST_TRIGGERS = [
   {
     id: 'fp',
-    trigger: r => r.filter(_isActive).some(u => _hasAbility(u,'Forbidden Pleasures')),
+    trigger: r => {
+      const active = r.filter(_isActive);
+      if (tcRoster) {
+        return active.some(u =>
+          (u.tcSpellIds||[]).some(id => id.toLowerCase().includes('forbidden')) ||
+          (u.tcSkillIds||[]).some(id => id.toLowerCase().includes('forbidden'))
+        );
+      }
+      return active.some(u => _hasAbility(u,'Forbidden Pleasures'));
+    },
     label: r => {
-      const cnt = r.filter(u => _isActive(u) && _hasAbility(u,'Forbidden Pleasures')).length;
-      const names = r.filter(u => _isActive(u) && _hasAbility(u,'Forbidden Pleasures')).map(u => t(u.name)).join(' + ');
+      const _hasFP = u => tcRoster
+        ? (u.tcSpellIds||[]).some(id => id.toLowerCase().includes('forbidden')) ||
+          (u.tcSkillIds||[]).some(id => id.toLowerCase().includes('forbidden'))
+        : _hasAbility(u,'Forbidden Pleasures');
+      const cnt = r.filter(u => _isActive(u) && _hasFP(u)).length;
+      const names = r.filter(u => _isActive(u) && _hasFP(u)).map(u => t(u.name)).join(' + ');
       return {
         es: `☠ FORBIDDEN PLEASURES (${names}): elige ${cnt} modelo(s) aliado(s) SIN Demonic → coloca 3 BM en cada uno. (Objetivo ideal: Wretched)`,
         en: `☠ FORBIDDEN PLEASURES (${names}): pick ${cnt} non-Demonic friendly model(s) → place 3 BM each. (Ideal target: Wretched)`
@@ -1215,6 +1228,17 @@ function buildUnitFromTc(mo, staticUnit, cmp) {
   // Upgrade IDs (up_infiltrator, etc.)
   const tcUpgradeIds = (mo.list_upgrades || []).map(u => u.object_id).filter(Boolean);
 
+  // Goetic spell IDs — TC may use list_spells, list_goetic, or include them in list_skills
+  // Log all keys to verify field names (remove after confirming)
+  console.log('[TC model]', mo.name, '| keys:', Object.keys(mo).join(', '));
+  const tcSpellIds = [
+    ...(mo.list_spells || []),
+    ...(mo.list_goetic || []),
+  ].map(s => s.object_id).filter(Boolean);
+
+  // Skill IDs for checklist lookups
+  const tcSkillIds = (mo.list_skills || []).map(s => s.object_id).filter(Boolean);
+
   return {
     id: mo.id,
     modelId: mo.model,
@@ -1235,6 +1259,8 @@ function buildUnitFromTc(mo, staticUnit, cmp) {
     cost:    staticUnit?.cost    || '?D',
     tcEquipment,
     tcUpgradeIds,
+    tcSpellIds,
+    tcSkillIds,
     tcExtraAdvs
   };
 }
