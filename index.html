@@ -685,9 +685,14 @@ const CHECKLIST_TRIGGERS = [
   },
   {
     id: 'infiltrator',
-    trigger: r => r.filter(_isActive).some(u => _hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator')),
+    trigger: r => r.filter(_isActive).some(u =>
+      _hasKeyword(u,'Infiltrator') ||
+      _hasAbility(u,'Infiltrator') ||
+      (u.tcUpgradeIds||[]).some(id => id.includes('infiltrator'))
+    ),
     label: r => {
-      const names = r.filter(u => _isActive(u) && (_hasKeyword(u,'Infiltrator')||_hasAbility(u,'Infiltrator'))).map(u => t(u.name)).join(', ');
+      const _isInfiltrator = u => _hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator') || (u.tcUpgradeIds||[]).some(id => id.includes('infiltrator'));
+      const names = r.filter(u => _isActive(u) && _isInfiltrator(u)).map(u => t(u.name)).join(', ');
       return {
         es: `🥷 INFILTRATOR (${names}): despliega DESPUÉS de todos los demás, fuera de zona y a 8"+ de enemigos`,
         en: `🥷 INFILTRATOR (${names}): deploys AFTER all others, outside deployment zone, 8"+ from enemies`
@@ -1128,12 +1133,44 @@ const TC_COMPENDIUM = {
   md_wretched_court:          { move:'6"',     melee:'0',   ranged:'0',   armour:'0',  type:'troop',     keywords:['The Court','Law of Hell'] },
   md_goeticwarlock:           { move:'6"',     melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Demonic','Fear','Artificial','Goetic'] },
   md_sineater:                { move:'6"',     melee:'+2D', ranged:'0',   armour:'0',  type:'mercenary', keywords:['Demonic','Fear','Tough','Strong'] },
+  // Heretic Legion — base
+  md_hereticpriest:              { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Heretic Legion','Leader','Fear'] },
+  md_lordoftumors:               { move:'5"', melee:'+2D', ranged:'0',   armour:'-2', type:'elite',     keywords:['Heretic Legion','Fear','Tough'] },
+  md_deathcommando:              { move:'6"', melee:'+2D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Heretic Legion','Infiltrator'] },
   // Heretic Legion — Knights of Avarice
   md_hereticpriest_mammonpriest: { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Heretic Legion','Knights of Avarice','Leader','Fear'] },
   md_heretichorister:            { move:'6"', melee:'+1D', ranged:'+2D', armour:'-1', type:'elite',     keywords:['Heretic Legion','Knights of Avarice'] },
   md_annointedheavyinfantry:     { move:'5"', melee:'+2D', ranged:'+1D', armour:'-3', type:'elite',     keywords:['Heretic Legion','Knights of Avarice','Strong'] },
   md_heretictrooper:             { move:'6"', melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Heretic Legion','Knights of Avarice'] },
   md_warwolfassaultbeast:        { move:'8"', melee:'+2D', ranged:'0',   armour:'-1', type:'troop',     keywords:['Heretic Legion','Fear','Beast'] },
+  // Cult of the Black Grail
+  md_heraldofbeelzebub:          { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Black Grail','Fear','Demonic'] },
+  md_plagueknight:               { move:'5"', melee:'+2D', ranged:'0',   armour:'-2', type:'elite',     keywords:['Black Grail','Fear','Tough'] },
+  md_corpseguard:                { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'troop',     keywords:['Black Grail'] },
+  md_houndsoftheblackgrail:      { move:'8"', melee:'+1D', ranged:'0',   armour:'0',  type:'troop',     keywords:['Black Grail','Fear','Beast'] },
+  md_grailthrall:                { move:'6"', melee:'0',   ranged:'0',   armour:'0',  type:'troop',     keywords:['Black Grail'] },
+  // Procession of the Sacred Affliction
+  md_warprophet:                 { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Procession','Leader','Fear'] },
+  md_communicant:                { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Procession'] },
+  md_stigmaticnun:               { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Procession'] },
+  md_trenchcleric:               { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Procession','New Antioch'] },
+  md_trenchpilgrim:              { move:'6"', melee:'0',   ranged:'0',   armour:'0',  type:'troop',     keywords:['Procession'] },
+  // New Antioch / Red Brigade / Stoßtruppen
+  md_lieutenant:                 { move:'6"', melee:'+1D', ranged:'+2D', armour:'-1', type:'elite',     keywords:['New Antioch','Leader'] },
+  md_sniperpriest:               { move:'6"', melee:'+1D', ranged:'+2D', armour:'-1', type:'elite',     keywords:['New Antioch'] },
+  md_mechanisedheavyinfantry:    { move:'4"', melee:'+2D', ranged:'+2D', armour:'-3', type:'elite',     keywords:['New Antioch','Strong','Tough'] },
+  md_yeoman:                     { move:'6"', melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['New Antioch'] },
+  md_combatengineer:             { move:'6"', melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['New Antioch'] },
+  md_shocktrooper:               { move:'6"', melee:'+2D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['New Antioch','Strong'] },
+  md_trenchdog_attackdog:        { move:'8"', melee:'+1D', ranged:'0',   armour:'0',  type:'troop',     keywords:['New Antioch','Beast'] },
+  // Iron Sultanate
+  md_yuzbasicaptain:             { move:'6"', melee:'+2D', ranged:'+1D', armour:'-2', type:'elite',     keywords:['Iron Sultanate','Leader','Fear'] },
+  md_jabireanalchemist:          { move:'6"', melee:'+1D', ranged:'+2D', armour:'-1', type:'elite',     keywords:['Iron Sultanate'] },
+  md_azeb:                       { move:'6"', melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Iron Sultanate'] },
+  md_janissaries:                { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'troop',     keywords:['Iron Sultanate'] },
+  md_sultanatesapper:            { move:'6"', melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Iron Sultanate'] },
+  md_lionofjabir:                { move:'8"', melee:'+2D', ranged:'0',   armour:'-1', type:'troop',     keywords:['Iron Sultanate','Fear','Beast'] },
+  md_brazenbull:                 { move:'6"', melee:'+3D', ranged:'0',   armour:'-3', type:'elite',     keywords:['Iron Sultanate','Fear','Tough','Strong'] },
 };
 
 // Static unit ID lookup by TC model type (single-instance models)
@@ -1166,6 +1203,9 @@ function buildUnitFromTc(mo, staticUnit, cmp) {
   // Equipment names from TC API
   const tcEquipment = (mo.equipment || []).map(e => e.equipment?.name).filter(Boolean);
 
+  // Upgrade IDs (up_infiltrator, etc.)
+  const tcUpgradeIds = (mo.list_upgrades || []).map(u => u.object_id).filter(Boolean);
+
   return {
     id: mo.id,
     modelId: mo.model,
@@ -1185,6 +1225,7 @@ function buildUnitFromTc(mo, staticUnit, cmp) {
     tactics: staticUnit?.tactics,
     cost:    staticUnit?.cost    || '?D',
     tcEquipment,
+    tcUpgradeIds,
     tcExtraAdvs
   };
 }
@@ -1196,7 +1237,10 @@ function injuryName(id) {
     in_lostfinger:'Lost Finger', in_losttoe:'Lost Toe', in_oldwound:'Old Wound',
     in_nervedamage:'Nerve Damage', in_fallenheroes:'Fallen Heroes', in_madness:'Madness',
     in_hobbled:'Hobbled', in_blinded:'Blinded', in_deafened:'Deafened',
-    in_multiplescars:'Multiple Scars', in_headwound:'Head Wound'
+    in_multiplescars:'Multiple Scars', in_headwound:'Head Wound',
+    in_chestwound:'Chest Wound', in_muscledamage:'Muscle Damage',
+    in_handwound:'Hand Wound', in_bitterlessons:'Bitter Lessons',
+    in_fullrecovery:'Full Recovery', in_paranoid:'Paranoia',
   };
   return map[id] || id.replace(/^in_/, '').replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase());
 }
@@ -1226,15 +1270,21 @@ function skillName(id) {
 }
 
 const FACTION_NAMES = {
-  'fc_courtofthesevenserpent':            'Court of the Seven-Headed Serpent',
-  'fc_hereticlegion':                      'Heretic Legion',
-  'fc_hereticlegion_fv_knightsofavarice': 'Knights of Avarice',
-  'fc_hereticlegion_fv_trenchpilgrims':   'Trench Pilgrims',
-  'fc_newantioch':                         'New Antioch',
-  'fc_blackgrail':                         'Black Grail',
-  'fc_ironsultanate':                      'Iron Sultanate',
-  'fc_cultoftheblackrose':                 'Cult of the Black Rose',
-  'fc_unholyinquisition':                  'Unholy Inquisition',
+  // Confirmed from lFdM 2026 campaign API
+  'fc_courtofthesevenheadedserpent':                            'Court of the Seven-Headed Serpent',
+  'fc_hereticlegion':                                            'Heretic Legion',
+  'fc_hereticlegion_fv_knightsofavarice':                       'Knights of Avarice',
+  'fc_cultoftheblackgrail':                                      'Cult of the Black Grail',
+  'fc_trenchpilgrim_fv_processionofthesacredaffliction':        'Procession of the Sacred Affliction',
+  'fc_newantioch':                                               'New Antioch',
+  'fc_newantioch_fv_redbrigade':                                 'Red Brigade',
+  'fc_newantioch_fv_stostruppenofthefreestateofprussia':        'Stoßtruppen of Prussia',
+  'fc_ironsultanate':                                            'Iron Sultanate',
+  // Additional known factions
+  'fc_hereticlegion_fv_trenchpilgrims':                         'Trench Pilgrims',
+  'fc_cultoftheblackrose':                                       'Cult of the Black Rose',
+  'fc_unholyinquisition':                                        'Unholy Inquisition',
+  'fc_courtofthesevenserpent':                                   'Court of the Seven-Headed Serpent',
 };
 
 async function syncFromTC() {
