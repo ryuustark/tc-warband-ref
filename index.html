@@ -176,9 +176,33 @@ button{font-family:inherit;cursor:pointer}
 #loading-overlay .lo-title{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);letter-spacing:3px}
 #loading-overlay .lo-sub{font-size:12px;color:var(--dim)}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* Campaign overview */
+.camp-hdr{text-align:center;padding:20px 14px 12px;border-bottom:1px solid var(--border);position:relative}
+.camp-title{font-size:26px;color:var(--gold);letter-spacing:4px;margin-bottom:4px}
+.camp-sub{font-size:11px;color:var(--dim);margin-bottom:12px}
+.camp-lang{position:absolute;top:18px;right:14px}
+.camp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+@media(max-width:380px){.camp-grid{grid-template-columns:1fr}}
+.wb-card{background:var(--card-bg);border:1px solid var(--border);border-radius:4px;padding:12px;cursor:pointer;transition:border-color 0.15s}
+.wb-card:hover{border-color:var(--accent-br)}
+.wb-card-name{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:6px;line-height:1.3}
+.wb-card-stats{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--text)}
+.wb-card-stat{background:var(--kw);border:1px solid var(--border);padding:1px 6px;border-radius:8px}
+.wb-card-alert{border-left:3px solid var(--accent-br)}
 </style>
 </head>
 <body>
+
+<div id="campaign-view" style="display:none">
+  <div class="camp-hdr">
+    <div class="camp-title gothic">TRENCH CRUSADE</div>
+    <div class="camp-sub" id="camp-sub">lFdM 2026</div>
+    <button class="btn btn-lang camp-lang" id="camp-lang-btn" onclick="toggleLang()">EN</button>
+  </div>
+  <div class="camp-grid" id="camp-grid"></div>
+</div>
+
+<div id="detail-view" style="display:none">
 
 <div class="hdr">
   <div class="hdr-top">
@@ -830,9 +854,17 @@ function t(obj) { return obj[lang] || obj.es || obj.en || ''; }
 
 function toggleLang() {
   lang = lang === 'es' ? 'en' : 'es';
-  document.getElementById('lang-btn').textContent = lang === 'es' ? 'EN' : 'ES';
+  const label = lang === 'es' ? 'EN' : 'ES';
+  const lb = document.getElementById('lang-btn');
+  const clb = document.getElementById('camp-lang-btn');
+  if (lb) lb.textContent = label;
+  if (clb) clb.textContent = label;
   document.documentElement.lang = lang;
-  // re-render dynamic sections, preserving open card state
+
+  // Campaign view — just re-render cards from cached data
+  if (campaignData) { renderCampaignView(campaignData); applyStaticLang(); return; }
+
+  // Detail view — re-render dynamic sections preserving open card state
   const openCards = new Set(
     [...document.querySelectorAll('.unit-card.open')].map(c => c.id.replace('card_',''))
   );
@@ -1206,6 +1238,7 @@ const TC_MODEL_TO_ID = {
 };
 
 let tcRoster = null;
+let campaignData = null;
 
 
 function injuryName(id) {
@@ -1264,6 +1297,51 @@ const FACTION_NAMES = {
   'fc_unholyinquisition':                                        'Unholy Inquisition',
   'fc_courtofthesevenserpent':                                   'Court of the Seven-Headed Serpent',
 };
+
+function renderCampaignView(wbList) {
+  const grid = document.getElementById('camp-grid');
+  if (!wbList || !wbList.length) { grid.textContent = '⚠ Sin datos'; return; }
+  grid.innerHTML = wbList.map(wb => {
+    const id = wb['warband-id'];
+    const name = wb['warband-name'] || `Warband ${id}`;
+    const models = wb.models || [];
+    const alive = models.filter(m => (m.status || m['model-status'] || 'active') !== 'dead');
+    const injured = models.filter(m => (m.injuries||[]).length > 0);
+    const hasAlert = injured.length > 0;
+    const ducats = wb['ducat-rating'] || 0;
+    return `<div class="wb-card${hasAlert?' wb-card-alert':''}" onclick="selectWarband('${id}')">
+      <div class="wb-card-name">${name}</div>
+      <div class="wb-card-stats">
+        <span class="wb-card-stat">⚔ ${alive.length}</span>
+        <span class="wb-card-stat">${ducats}D</span>
+        ${hasAlert ? `<span class="wb-card-stat" style="color:var(--gold)">⚠ ${injured.length} herida${injured.length>1?'s':''}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectWarband(id) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('id', String(id));
+  window.location.href = url.toString();
+}
+
+async function loadCampaign() {
+  const msg = document.getElementById('lo-msg');
+  if (msg) msg.textContent = lang === 'en' ? 'Loading campaign…' : 'Cargando campaña…';
+  const res = await fetchWithProxies(TC_CAMPAIGN_API);
+  hideLoading();
+  if (!res) { document.getElementById('camp-grid').textContent = '⚠ Sin conexión'; return; }
+  try {
+    const data = await res.json();
+    const wbList = Array.isArray(data) ? data : (data.warbands || data.data || []);
+    campaignData = wbList;
+    renderCampaignView(wbList);
+  } catch(e) {
+    console.error('[Campaign]', e);
+    document.getElementById('camp-grid').textContent = '⚠ Error al cargar';
+  }
+}
 
 function hideLoading() {
   const ov = document.getElementById('loading-overlay');
@@ -1376,23 +1454,24 @@ function applyStaticLang() {
 
 function init() {
   const urlId = new URLSearchParams(location.search).get('id');
-  const needsFreshSync = urlId && urlId !== String(TC_ID);
 
-  if (!needsFreshSync) {
-    renderHeader(); renderWarnings(); renderChecklist();
-    renderUnits(); renderFaction(); applyStaticLang();
-    hideLoading();
+  if (!urlId) {
+    document.getElementById('campaign-view').style.display = 'block';
+    applyStaticLang();
+    loadCampaign();
   } else {
+    document.getElementById('detail-view').style.display = 'block';
     const msg = document.getElementById('lo-msg');
     if (msg) msg.textContent = lang === 'en'
       ? `Loading warband ${urlId}…`
       : `Cargando banda ${urlId}…`;
+    syncFromTC();
   }
-  syncFromTC();
 }
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+</div><!-- #detail-view -->
 <div id="loading-overlay">
   <div class="lo-spinner"></div>
   <div class="lo-title">TRENCH CRUSADE</div>
