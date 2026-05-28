@@ -626,29 +626,24 @@ const WARBAND = {
    Each entry fires a pre-game checklist item when trigger(roster) is true.
    roster includes active + reserve units (dead excluded by generateChecklist).
    ═══════════════════════════════════════════════════════════════════ */
-const _hasAbility = (u, nameEn) => (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase() === nameEn.toLowerCase());
-const _hasInjury  = (u, nameEn) => (u.injuries||[]).some(i => (i.name.en||i.name.es||'').toLowerCase() === nameEn.toLowerCase());
-const _hasKeyword = (u, kw)     => (u.keywords||[]).some(k => k.toLowerCase() === kw.toLowerCase());
-const _isActive   = u => u.status === 'active';
+const _hasAbility    = (u, nameEn) => (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase() === nameEn.toLowerCase());
+const _hasInjury     = (u, nameEn) => (u.injuries||[]).some(i => (i.name.en||i.name.es||'').toLowerCase() === nameEn.toLowerCase());
+const _hasKeyword    = (u, kw)     => (u.keywords||[]).some(k => k.toLowerCase() === kw.toLowerCase());
+const _hasAbilityId  = (u, id)     => (u.abilityIds||[]).includes(id);
+const _hasUpgradeId  = (u, partial)=> (u.upgradeIds||[]).some(id => id.includes(partial));
+const _hasKwId       = (u, kwId)   => (u.keywordIds||[]).includes(kwId);
+const _isActive      = u => u.status === 'active';
 
 const CHECKLIST_TRIGGERS = [
   {
     id: 'fp',
     trigger: r => {
       const active = r.filter(_isActive);
-      if (tcRoster) {
-        return active.some(u =>
-          (u.tcSpellIds||[]).some(id => id.toLowerCase().includes('forbidden')) ||
-          (u.tcSkillIds||[]).some(id => id.toLowerCase().includes('forbidden'))
-        );
-      }
+      if (tcRoster) return active.some(u => _hasUpgradeId(u,'forbidden'));
       return active.some(u => _hasAbility(u,'Forbidden Pleasures'));
     },
     label: r => {
-      const _hasFP = u => tcRoster
-        ? (u.tcSpellIds||[]).some(id => id.toLowerCase().includes('forbidden')) ||
-          (u.tcSkillIds||[]).some(id => id.toLowerCase().includes('forbidden'))
-        : _hasAbility(u,'Forbidden Pleasures');
+      const _hasFP = u => tcRoster ? _hasUpgradeId(u,'forbidden') : _hasAbility(u,'Forbidden Pleasures');
       const cnt = r.filter(u => _isActive(u) && _hasFP(u)).length;
       const names = r.filter(u => _isActive(u) && _hasFP(u)).map(u => t(u.name)).join(' + ');
       return {
@@ -670,7 +665,9 @@ const CHECKLIST_TRIGGERS = [
   },
   {
     id: 'law',
-    trigger: r => r.filter(_isActive).some(u => _hasAbility(u,'Law of Hell')),
+    trigger: r => r.filter(_isActive).some(u =>
+      tcRoster ? _hasAbilityId(u,'ab_lawofhell') : _hasAbility(u,'Law of Hell')
+    ),
     label: () => ({
       es: '⚠ LAW OF HELL: NUNCA dejar que los Wretched lancen el golpe final contra Elites enemigos — se retiran permanentemente del Roster',
       en: '⚠ LAW OF HELL: NEVER let Wretched land the killing blow on enemy Elites — they are permanently removed from the Roster'
@@ -704,12 +701,10 @@ const CHECKLIST_TRIGGERS = [
   {
     id: 'infiltrator',
     trigger: r => r.filter(_isActive).some(u =>
-      _hasKeyword(u,'Infiltrator') ||
-      _hasAbility(u,'Infiltrator') ||
-      (u.tcUpgradeIds||[]).some(id => id.includes('infiltrator'))
+      tcRoster ? _hasUpgradeId(u,'infiltrator') : (_hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator'))
     ),
     label: r => {
-      const _isInfiltrator = u => _hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator') || (u.tcUpgradeIds||[]).some(id => id.includes('infiltrator'));
+      const _isInfiltrator = u => tcRoster ? _hasUpgradeId(u,'infiltrator') : (_hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator'));
       const names = r.filter(u => _isActive(u) && _isInfiltrator(u)).map(u => t(u.name)).join(', ');
       return {
         es: `🥷 INFILTRATOR (${names}): despliega DESPUÉS de todos los demás, fuera de zona y a 8"+ de enemigos`,
@@ -719,10 +714,18 @@ const CHECKLIST_TRIGGERS = [
   },
   {
     id: 'hateful',
-    trigger: r => r.filter(_isActive).some(u => (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'))),
+    trigger: r => r.filter(_isActive).some(u =>
+      tcRoster
+        ? (u.abilityIds||[]).some(id => id.includes('hateful'))
+        : (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'))
+    ),
     label: r => {
-      const names = r.filter(u => _isActive(u) && (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'))).map(u => t(u.name)).join(', ');
-      const suppressed = r.filter(u => _isActive(u) && (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful') && (a.name.en||a.name.es||'').toLowerCase().includes('suppress')));
+      const _isHateful = u => tcRoster
+        ? (u.abilityIds||[]).some(id => id.includes('hateful'))
+        : (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'));
+      const names = r.filter(u => _isActive(u) && _isHateful(u)).map(u => t(u.name)).join(', ');
+      // Restraining Muzzle suppresses Hateful — check equipment
+      const suppressed = r.filter(u => _isActive(u) && _isHateful(u) && (u.tcEquipment||[]).some(e => e.toLowerCase().includes('muzzle')));
       const allSuppressed = suppressed.length > 0;
       return {
         es: `🔇 ${names}: Hateful ${allSuppressed ? 'SUPRIMIDA por Restraining Muzzle — pueden activarse con normalidad' : 'ACTIVA — deben cargar al enemigo más cercano'}`,
@@ -732,7 +735,7 @@ const CHECKLIST_TRIGGERS = [
   },
   {
     id: 'demonic',
-    trigger: r => r.filter(_isActive).some(u => _hasKeyword(u,'Demonic')),
+    trigger: r => r.filter(_isActive).some(u => tcRoster ? _hasKwId(u,'kw_demonic') : _hasKeyword(u,'Demonic')),
     label: () => ({
       es: '🔥 Todos los modelos DEMONIC tienen Negate Fire automático',
       en: '🔥 All DEMONIC models have Negate Fire automatically'
@@ -740,7 +743,7 @@ const CHECKLIST_TRIGGERS = [
   },
   {
     id: 'wretched_limit',
-    trigger: r => r.filter(_isActive).some(u => _hasAbility(u,'Law of Hell')),
+    trigger: r => r.filter(_isActive).some(u => tcRoster ? _hasAbilityId(u,'ab_lawofhell') : _hasAbility(u,'Law of Hell')),
     label: () => ({
       es: '📊 LÍMITE WRETCHED: # de Wretched activos debe ser < # de modelos DEMONIC activos',
       en: '📊 WRETCHED LIMIT: # active Wretched must be < # active DEMONIC models'
@@ -1136,7 +1139,8 @@ function resetGame() {
    TC LIVE SYNC  — uses synod.trench-companion.com JSON API directly
    Overlay: keyed by WARBAND unit id — never mutates WARBAND directly
    ═══════════════════════════════════════════════════════════════════ */
-const TC_API = "https://synod.trench-companion.com/wp-json/synod/v1/multi-dataset";
+const TC_CAMPAIGN_ID = 215135;
+const TC_CAMPAIGN_API = `https://synod.trench-companion.com/wp-json/synod/v1/campaigns/${TC_CAMPAIGN_ID}`;
 const CORS_PROXIES = [
   "https://api.allorigins.win/raw?url=",
   "https://corsproxy.io/?url=",
@@ -1203,67 +1207,6 @@ const TC_MODEL_TO_ID = {
 
 let tcRoster = null;
 
-function buildUnitFromTc(mo, staticUnit, cmp) {
-  const status = mo.active === 'dead' ? 'dead' : mo.active === 'reserved' ? 'reserve' : 'active';
-  const type = staticUnit?.type || cmp?.type || (mo.elite ? 'elite' : 'troop');
-
-  // Injuries: map TC IDs → names + static descriptions where available
-  const injuries = (mo.list_injury || []).map(inj => {
-    const name = injuryName(inj.object_id);
-    const staticInj = staticUnit?.injuries?.find(i =>
-      (i.name.en || i.name.es).toLowerCase() === name.toLowerCase()
-    );
-    return staticInj || { name:{es:name,en:name}, effect:{es:'ver TC',en:'see TC'} };
-  });
-
-  // Advancements from TC not already in static abilities
-  const staticAblNames = new Set((staticUnit?.abilities || []).map(a => (a.name.en||a.name.es).toLowerCase()));
-  const tcExtraAdvs = (mo.list_skills || [])
-    .map(s => skillName(s.object_id))
-    .filter(n => !staticAblNames.has(n.toLowerCase()));
-
-  // Equipment names from TC API
-  const tcEquipment = (mo.equipment || []).map(e => e.equipment?.name).filter(Boolean);
-
-  // Upgrade IDs (up_infiltrator, etc.)
-  const tcUpgradeIds = (mo.list_upgrades || []).map(u => u.object_id).filter(Boolean);
-
-  // Goetic spell IDs — TC may use list_spells, list_goetic, or include them in list_skills
-  // Log all keys to verify field names (remove after confirming)
-  console.log('[TC model]', mo.name, '| keys:', Object.keys(mo).join(', '));
-  const tcSpellIds = [
-    ...(mo.list_spells || []),
-    ...(mo.list_goetic || []),
-  ].map(s => s.object_id).filter(Boolean);
-
-  // Skill IDs for checklist lookups
-  const tcSkillIds = (mo.list_skills || []).map(s => s.object_id).filter(Boolean);
-
-  return {
-    id: mo.id,
-    modelId: mo.model,
-    name: { es: mo.name, en: mo.name },
-    type,
-    status,
-    xp: mo.experience || 0,
-    scars: mo.scar_reserves || 0,
-    move:    staticUnit?.move    || cmp?.move    || '?',
-    melee:   staticUnit?.melee   || cmp?.melee   || '?',
-    ranged:  staticUnit?.ranged  || cmp?.ranged  || '?',
-    armour:  staticUnit?.armour  || cmp?.armour  || '?',
-    keywords: staticUnit?.keywords || cmp?.keywords || [],
-    weapons:  staticUnit?.weapons  || [],
-    abilities: staticUnit?.abilities || [],
-    injuries,
-    tactics: staticUnit?.tactics,
-    cost:    staticUnit?.cost    || '?D',
-    tcEquipment,
-    tcUpgradeIds,
-    tcSpellIds,
-    tcSkillIds,
-    tcExtraAdvs
-  };
-}
 
 function injuryName(id) {
   const map = {
@@ -1327,59 +1270,83 @@ function hideLoading() {
   if (ov) ov.style.display = 'none';
 }
 
+function buildUnitFromTts(mo) {
+  const keywordIds    = (mo.keywords||[]).map(k => k['keyword-id']).filter(Boolean);
+  const keywordNames  = (mo.keywords||[]).map(k => k['keyword-name']).filter(Boolean);
+  const abilityIds    = (mo.abilities||[]).map(a => a['ability-id']).filter(Boolean);
+  const upgradeIds    = (mo.upgrades||[]).map(u => u['upgrade-id']).filter(Boolean);
+  const advancementIds= (mo.advancements||[]).map(a => a['advancement-id']).filter(Boolean);
+  const tcEquipment   = (mo.equipment||[]).map(e => e['equipment-name']).filter(Boolean);
+  const isElite = keywordIds.includes('kw_elite');
+  const moveRaw = mo['stat-move'] || '?';
+  const move = moveRaw.includes('/') ? moveRaw.split('/')[0] : moveRaw;
+  const status = mo.status || mo['model-status'] || 'active';
+
+  const injuries = (mo.injuries||[]).map(inj => {
+    const id = inj['injury-id'] || '';
+    const name = injuryName(id);
+    return { name:{es:name, en:name}, effect:{es:'ver TC', en:'see TC'}, injuryId: id };
+  });
+
+  // Overlay rich static text (abilities, weapons, tactics) when model type matches
+  const mdType = mo['model-id'];
+  const staticUnit = TC_MODEL_TO_ID[mdType]
+    ? WARBAND.units.find(u => u.id === TC_MODEL_TO_ID[mdType])
+    : null;
+
+  return {
+    id: `${mdType}_${(mo.name||'').replace(/\s+/g,'_').toLowerCase()}`,
+    modelId: mdType,
+    name: { es: mo.name, en: mo.name },
+    modelName: mo['model-name'],
+    type: isElite ? 'elite' : 'troop',
+    status,
+    move,
+    melee:  mo['stat-melee']  || '?',
+    ranged: mo['stat-ranged'] || '?',
+    armour: mo['stat-armour'] || '?',
+    keywords: keywordNames,
+    keywordIds,
+    abilityIds,
+    upgradeIds,
+    advancementIds,
+    abilities: staticUnit?.abilities || [],
+    weapons:   staticUnit?.weapons   || [],
+    injuries,
+    tactics: staticUnit?.tactics || null,
+    cost: mo.cost?.ducats ? `${mo.cost.ducats}D` : '?D',
+    tcEquipment,
+  };
+}
+
+async function fetchWithProxies(url) {
+  let res = await fetch(url).catch(() => null);
+  for (const proxy of CORS_PROXIES) {
+    if (res && res.ok) break;
+    res = await fetch(proxy + encodeURIComponent(url)).catch(() => null);
+  }
+  return (res && res.ok) ? res : null;
+}
+
 async function syncFromTC() {
   const badge = document.getElementById('sync-badge');
   badge.textContent = '⏳'; badge.style.display = 'inline';
   try {
-    const apiUrl = `${TC_API}?warbands=${activeTcId}`;
-    // Always try direct first — synod.trench-companion.com is a public WP REST API
-    // with permissive CORS. Only fall back to proxy if direct fetch fails.
-    let res = await fetch(apiUrl).catch(() => null);
-    for (const proxy of CORS_PROXIES) {
-      if (res && res.ok) break;
-      res = await fetch(proxy + encodeURIComponent(apiUrl)).catch(() => null);
-    }
-    if (!res || !res.ok) { hideLoading(); badge.textContent = '⚠ Offline'; return; }
+    // Fetch TTS JSON from campaign endpoint (confirmed in browser console)
+    const res = await fetchWithProxies(TC_CAMPAIGN_API);
+    if (!res) { hideLoading(); badge.textContent = '⚠ Offline'; return; }
 
     const data = await res.json();
-    const wbRaw = data.warbands?.[activeTcId]?.warband_data;
-    if (!wbRaw) { hideLoading(); badge.textContent = '⚠ No data'; return; }
-    const wb = typeof wbRaw === 'string' ? JSON.parse(wbRaw) : wbRaw;
+    // Campaign endpoint returns an array of warband objects
+    const wbList = Array.isArray(data) ? data : (data.warbands || data.data || []);
+    const wb = wbList.find(w => String(w['warband-id']) === String(activeTcId));
+    if (!wb) { hideLoading(); badge.textContent = '⚠ No data'; return; }
 
-    // Warband metadata
-    if (wb.name) WARBAND.meta.tcName = wb.name;
-    WARBAND.meta.tcStash = wb.ducat_bank ?? WARBAND.meta.stash;
-    WARBAND.meta.tcGlory = wb.glory_bank ?? WARBAND.meta.glory;
+    WARBAND.meta.tcName  = wb['warband-name'] || WARBAND.meta.tcName;
+    WARBAND.meta.tcStash = wb['ducat-bank']   ?? WARBAND.meta.stash;
+    WARBAND.meta.tcGlory = wb['glory-bank']   ?? WARBAND.meta.glory;
 
-    // Faction name
-    const factionId = wb.faction?.faction_property?.object_id || '';
-    WARBAND.meta.tcFaction = FACTION_NAMES[factionId]
-      || factionId.replace(/^fc_/, '').replace(/_fv_/g, ' — ')
-                  .replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-      || '';
-
-    // Build TC roster — each model matched to static unit for rich text
-    const modelTypeCounts = {};
-    const newRoster = (wb.models || []).map(m => {
-      const mo = m.model;
-      const mdType = mo.model;
-      modelTypeCounts[mdType] = (modelTypeCounts[mdType] || 0) + 1;
-      const count = modelTypeCounts[mdType];
-      const cmp = TC_COMPENDIUM[mdType] || null;
-
-      let staticUnit = null;
-      if (TC_MODEL_TO_ID[mdType]) {
-        staticUnit = WARBAND.units.find(u => u.id === TC_MODEL_TO_ID[mdType]);
-      } else if (mdType === 'md_pitlocust') {
-        staticUnit = WARBAND.units.find(u => u.id === (mo.elite ? 'pitlocust_e' : 'pitlocust_t'));
-      } else if (mdType === 'md_yokefiend') {
-        staticUnit = WARBAND.units.find(u => u.id === 'yokefiend_' + count);
-      } else if (mdType === 'md_wretched_court' || mdType === 'md_wretched') {
-        staticUnit = WARBAND.units.find(u => u.id === 'wretched_' + count);
-      }
-
-      return buildUnitFromTc(mo, staticUnit, cmp);
-    });
+    const newRoster = (wb.models || []).map(mo => buildUnitFromTts(mo));
 
     tcRoster = newRoster;
     renderHeader();
