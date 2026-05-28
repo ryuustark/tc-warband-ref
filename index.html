@@ -673,11 +673,15 @@ const CHECKLIST_TRIGGERS = [
     id: 'fp',
     trigger: r => {
       const active = r.filter(_isActive);
-      if (tcRoster) return active.some(u => _hasUpgradeId(u,'forbidden'));
-      return active.some(u => _hasAbility(u,'Forbidden Pleasures'));
+      // When synced: check upgrade IDs (purchased) OR static abilities (own warband overlay)
+      if (tcRoster) return active.some(u => _hasUpgradeId(u,'forbidden') || _hasAbility(u,'Forbidden Pleasures'));
+      // Static fallback: only apply for own warband
+      return String(activeTcId) === TC_ID && active.some(u => _hasAbility(u,'Forbidden Pleasures'));
     },
     label: r => {
-      const _hasFP = u => tcRoster ? _hasUpgradeId(u,'forbidden') : _hasAbility(u,'Forbidden Pleasures');
+      const _hasFP = u => tcRoster
+        ? (_hasUpgradeId(u,'forbidden') || _hasAbility(u,'Forbidden Pleasures'))
+        : _hasAbility(u,'Forbidden Pleasures');
       const cnt = r.filter(u => _isActive(u) && _hasFP(u)).length;
       const names = r.filter(u => _isActive(u) && _hasFP(u)).map(u => t(u.name)).join(' + ');
       return {
@@ -1401,7 +1405,8 @@ function buildUnitFromTc(mo) {
   const mdType = mo.model;
   const status = mo.active === 'dead' ? 'dead' : mo.active === 'reserved' ? 'reserve' : 'active';
   const cmp = TC_COMPENDIUM[mdType] || null;
-  const staticUnit = TC_MODEL_TO_ID[mdType]
+  // Only overlay rich static text (abilities, weapons, FP) when viewing own warband
+  const staticUnit = (String(activeTcId) === TC_ID && TC_MODEL_TO_ID[mdType])
     ? WARBAND.units.find(u => u.id === TC_MODEL_TO_ID[mdType])
     : null;
 
