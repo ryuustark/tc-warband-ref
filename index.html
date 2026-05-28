@@ -704,7 +704,7 @@ const CHECKLIST_TRIGGERS = [
   {
     id: 'law',
     trigger: r => r.filter(_isActive).some(u =>
-      tcRoster ? _hasAbilityId(u,'ab_lawofhell') : _hasAbility(u,'Law of Hell')
+      tcRoster ? (_hasAbilityId(u,'ab_lawofhell') || _hasKwId(u,'kw_law_of_hell')) : _hasAbility(u,'Law of Hell')
     ),
     label: () => ({
       es: '⚠ LAW OF HELL: NUNCA dejar que los Wretched lancen el golpe final contra Elites enemigos — se retiran permanentemente del Roster',
@@ -739,10 +739,10 @@ const CHECKLIST_TRIGGERS = [
   {
     id: 'infiltrator',
     trigger: r => r.filter(_isActive).some(u =>
-      tcRoster ? _hasUpgradeId(u,'infiltrator') : (_hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator'))
+      tcRoster ? (_hasUpgradeId(u,'infiltrator') || _hasKwId(u,'kw_infiltrator')) : (_hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator'))
     ),
     label: r => {
-      const _isInfiltrator = u => tcRoster ? _hasUpgradeId(u,'infiltrator') : (_hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator'));
+      const _isInfiltrator = u => tcRoster ? (_hasUpgradeId(u,'infiltrator') || _hasKwId(u,'kw_infiltrator')) : (_hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator'));
       const names = r.filter(u => _isActive(u) && _isInfiltrator(u)).map(u => t(u.name)).join(', ');
       return {
         es: `🥷 INFILTRATOR (${names}): despliega DESPUÉS de todos los demás, fuera de zona y a 8"+ de enemigos`,
@@ -754,12 +754,12 @@ const CHECKLIST_TRIGGERS = [
     id: 'hateful',
     trigger: r => r.filter(_isActive).some(u =>
       tcRoster
-        ? (u.abilityIds||[]).some(id => id.includes('hateful'))
+        ? ((u.abilityIds||[]).some(id => id.includes('hateful')) || _hasKwId(u,'kw_hateful'))
         : (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'))
     ),
     label: r => {
       const _isHateful = u => tcRoster
-        ? (u.abilityIds||[]).some(id => id.includes('hateful'))
+        ? ((u.abilityIds||[]).some(id => id.includes('hateful')) || _hasKwId(u,'kw_hateful'))
         : (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'));
       const names = r.filter(u => _isActive(u) && _isHateful(u)).map(u => t(u.name)).join(', ');
       // Restraining Muzzle suppresses Hateful — check equipment
@@ -781,7 +781,7 @@ const CHECKLIST_TRIGGERS = [
   },
   {
     id: 'wretched_limit',
-    trigger: r => r.filter(_isActive).some(u => tcRoster ? _hasAbilityId(u,'ab_lawofhell') : _hasAbility(u,'Law of Hell')),
+    trigger: r => r.filter(_isActive).some(u => tcRoster ? (_hasAbilityId(u,'ab_lawofhell') || _hasKwId(u,'kw_law_of_hell')) : _hasAbility(u,'Law of Hell')),
     label: () => ({
       es: '📊 LÍMITE WRETCHED: # de Wretched activos debe ser < # de modelos DEMONIC activos',
       en: '📊 WRETCHED LIMIT: # active Wretched must be < # active DEMONIC models'
