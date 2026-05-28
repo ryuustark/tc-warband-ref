@@ -819,6 +819,50 @@ const CHECKLIST_TRIGGERS = [
         en: `🎲 OLD WOUND (${names}): roll 1D6 at game start — on 1-2 the model starts the game Down`
       };
     }
+  },
+  {
+    id: 'paranoia',
+    trigger: r => r.filter(_isActive).some(u => _hasInjury(u,'Paranoia')),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && _hasInjury(u,'Paranoia')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🧠 PARANOIA (${names}): al desplegar, debe colocarse a 8"+ de CUALQUIER modelo amigo`,
+        en: `🧠 PARANOIA (${names}): on deployment, must be placed 8"+ away from ANY friendly model`
+      };
+    }
+  },
+  {
+    id: 'chest_wound',
+    trigger: r => r.filter(_isActive).some(u => _hasInjury(u,'Chest Wound')),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && _hasInjury(u,'Chest Wound')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🫀 CHEST WOUND (${names}): los rivales tiran con +1D en todos los Injury Rolls contra este modelo`,
+        en: `🫀 CHEST WOUND (${names}): opponents roll +1D on all Injury Rolls against this model`
+      };
+    }
+  },
+  {
+    id: 'muscle_damage',
+    trigger: r => r.filter(_isActive).some(u => _hasInjury(u,'Muscle Damage')),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && _hasInjury(u,'Muscle Damage')).map(u => t(u.name)).join(', ');
+      return {
+        es: `💪 MUSCLE DAMAGE (${names}): no puede portar ni usar armas o equipo con keyword HEAVY`,
+        en: `💪 MUSCLE DAMAGE (${names}): cannot carry or use any weapon or item with the HEAVY keyword`
+      };
+    }
+  },
+  {
+    id: 'hand_wound',
+    trigger: r => r.filter(_isActive).some(u => _hasInjury(u,'Hand Wound')),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && _hasInjury(u,'Hand Wound')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🤛 HAND WOUND (${names}): -1D a todas sus Melee Attack Actions`,
+        en: `🤛 HAND WOUND (${names}): -1D to all its Melee Attack Actions`
+      };
+    }
   }
 ];
 
