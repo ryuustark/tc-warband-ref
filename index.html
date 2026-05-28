@@ -179,7 +179,7 @@ button{font-family:inherit;cursor:pointer}
   <div class="hdr-top">
     <div>
       <div class="wband-name gothic" id="hdr-name">Smoking Lust</div>
-      <div class="faction-line" id="hdr-faction">Court of the Seven-Headed Serpent · Infernal Noble</div>
+      <div class="faction-line" id="hdr-faction" data-static="Court of the Seven-Headed Serpent · Infernal Noble">Court of the Seven-Headed Serpent · Infernal Noble</div>
       <div class="faction-line"><a class="tc-link" id="hdr-tc-link" target="_blank">↗ Trench Companion</a><span class="sync-badge" id="sync-badge">⚡ Synced</span></div>
       <div class="tc-id-row">
         <span class="tc-id-lbl">TC ID:</span>
@@ -269,18 +269,6 @@ const WARBAND = {
     stash: 0,
     gloryUnspent: 2
   },
-
-  preGameChecklist: [
-    {id:"fp",      label:{es:"☠ FORBIDDEN PLEASURES: elige 1 modelo aliado SIN Demonic por cada Sorcerer/Praetor en mesa → coloca 3 BM. (Objetivo ideal: Wretched)",en:"☠ FORBIDDEN PLEASURES: pick 1 non-Demonic friendly model per Sorcerer/Praetor on table → place 3 BM each. (Ideal target: Wretched)"}},
-    {id:"shell",   label:{es:"🎲 SHELL SHOCKED (Pit Locust Elite): al desplegar, tira 1D6 — con 1-2 aplica -1D a todas sus tiradas toda la partida",en:"🎲 SHELL SHOCKED (Elite Pit Locust): on deploy, roll 1D6 — on 1-2 apply -1D to all rolls for the whole game"}},
-    {id:"law",     label:{es:"⚠ LAW OF HELL: NO dejar que los Wretched lancen el golpe final contra Elites enemigos — se retiran permanentemente del Roster",en:"⚠ LAW OF HELL: NEVER let Wretched land the killing blow on enemy Elites — they are permanently removed from the Roster"}},
-    {id:"darkmem", label:{es:"🎯 DARK MEMORY (Sorcerer): banda temida = Heretic Legion — -1D en Melee contra ellos",en:"🎯 DARK MEMORY (Sorcerer): feared warband = Heretic Legion — -1D to Melee attacks against them"}},
-    {id:"minorw",  label:{es:"🏥 PRAETOR en Reserves (Minor Wound) — no puede usarse en esta partida",en:"🏥 PRAETOR in Reserves (Minor Wound) — cannot be fielded this game"}},
-    {id:"infiltr", label:{es:"🥷 HUNTER (Infiltrator): despliega DESPUÉS de todos los demás, fuera de zona y a 8\"+ de enemigos",en:"🥷 HUNTER (Infiltrator): deploys AFTER all others, outside deployment zone, 8\"+ from enemies"}},
-    {id:"hateful", label:{es:"🔇 YOKE FIENDS: Hateful SUPRIMIDA por Restraining Muzzle — pueden activarse con normalidad",en:"🔇 YOKE FIENDS: Hateful SUPPRESSED by Restraining Muzzle — they activate freely"}},
-    {id:"demonic", label:{es:"🔥 Todos los modelos DEMONIC tienen Negate Fire automático",en:"🔥 All DEMONIC models have Negate Fire automatically"}},
-    {id:"wretlim", label:{es:"📊 LÍMITE WRETCHED: # de Wretched activos debe ser < # de modelos DEMONIC activos",en:"📊 WRETCHED LIMIT: # active Wretched must be < # active DEMONIC models"}}
-  ],
 
   units: [
     /* ── ELITES ──────────────────────────────────────────────── */
@@ -629,6 +617,155 @@ const WARBAND = {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   CHECKLIST TRIGGERS
+   Each entry fires a pre-game checklist item when trigger(roster) is true.
+   roster includes active + reserve units (dead excluded by generateChecklist).
+   ═══════════════════════════════════════════════════════════════════ */
+const _hasAbility = (u, nameEn) => (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase() === nameEn.toLowerCase());
+const _hasInjury  = (u, nameEn) => (u.injuries||[]).some(i => (i.name.en||i.name.es||'').toLowerCase() === nameEn.toLowerCase());
+const _hasKeyword = (u, kw)     => (u.keywords||[]).some(k => k.toLowerCase() === kw.toLowerCase());
+const _isActive   = u => u.status === 'active';
+
+const CHECKLIST_TRIGGERS = [
+  {
+    id: 'fp',
+    trigger: r => r.filter(_isActive).some(u => _hasAbility(u,'Forbidden Pleasures')),
+    label: r => {
+      const cnt = r.filter(u => _isActive(u) && _hasAbility(u,'Forbidden Pleasures')).length;
+      const names = r.filter(u => _isActive(u) && _hasAbility(u,'Forbidden Pleasures')).map(u => t(u.name)).join(' + ');
+      return {
+        es: `☠ FORBIDDEN PLEASURES (${names}): elige ${cnt} modelo(s) aliado(s) SIN Demonic → coloca 3 BM en cada uno. (Objetivo ideal: Wretched)`,
+        en: `☠ FORBIDDEN PLEASURES (${names}): pick ${cnt} non-Demonic friendly model(s) → place 3 BM each. (Ideal target: Wretched)`
+      };
+    }
+  },
+  {
+    id: 'shell',
+    trigger: r => r.filter(u => _isActive(u) && u.type === 'elite').some(u => _hasInjury(u,'Shell Shocked')),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && u.type === 'elite' && _hasInjury(u,'Shell Shocked')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🎲 SHELL SHOCKED (${names}): al desplegar, tira 1D6 — con 1-2 aplica -1D a todas sus tiradas toda la partida`,
+        en: `🎲 SHELL SHOCKED (${names}): on deploy, roll 1D6 — on 1-2 apply -1D to all rolls for the whole game`
+      };
+    }
+  },
+  {
+    id: 'law',
+    trigger: r => r.filter(_isActive).some(u => _hasAbility(u,'Law of Hell')),
+    label: () => ({
+      es: '⚠ LAW OF HELL: NUNCA dejar que los Wretched lancen el golpe final contra Elites enemigos — se retiran permanentemente del Roster',
+      en: '⚠ LAW OF HELL: NEVER let Wretched land the killing blow on enemy Elites — they are permanently removed from the Roster'
+    })
+  },
+  {
+    id: 'dark_memory',
+    trigger: r => r.filter(u => u.status !== 'dead').some(u => _hasInjury(u,'Dark Memory')),
+    label: r => {
+      const affected = r.filter(u => u.status !== 'dead' && _hasInjury(u,'Dark Memory'));
+      const names = affected.map(u => t(u.name)).join(', ');
+      const inj = affected[0]?.injuries?.find(i => (i.name.en||i.name.es||'').toLowerCase() === 'dark memory');
+      const eff = inj ? t(inj.effect) : 'banda temida — -1D en Melee contra ellos';
+      return {
+        es: `🎯 DARK MEMORY (${names}): ${eff}`,
+        en: `🎯 DARK MEMORY (${names}): ${inj ? t(inj.effect) : 'feared warband — -1D to Melee attacks against them'}`
+      };
+    }
+  },
+  {
+    id: 'minor_wound',
+    trigger: r => r.some(u => u.status === 'reserve' && _hasInjury(u,'Minor Wound')),
+    label: r => {
+      const names = r.filter(u => u.status === 'reserve' && _hasInjury(u,'Minor Wound')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🏥 ${names} en Reservas (Minor Wound) — no puede usarse en esta partida`,
+        en: `🏥 ${names} in Reserves (Minor Wound) — cannot be fielded this game`
+      };
+    }
+  },
+  {
+    id: 'infiltrator',
+    trigger: r => r.filter(_isActive).some(u => _hasKeyword(u,'Infiltrator') || _hasAbility(u,'Infiltrator')),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && (_hasKeyword(u,'Infiltrator')||_hasAbility(u,'Infiltrator'))).map(u => t(u.name)).join(', ');
+      return {
+        es: `🥷 INFILTRATOR (${names}): despliega DESPUÉS de todos los demás, fuera de zona y a 8"+ de enemigos`,
+        en: `🥷 INFILTRATOR (${names}): deploys AFTER all others, outside deployment zone, 8"+ from enemies`
+      };
+    }
+  },
+  {
+    id: 'hateful',
+    trigger: r => r.filter(_isActive).some(u => (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'))),
+    label: r => {
+      const names = r.filter(u => _isActive(u) && (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful'))).map(u => t(u.name)).join(', ');
+      const suppressed = r.filter(u => _isActive(u) && (u.abilities||[]).some(a => (a.name.en||a.name.es||'').toLowerCase().includes('hateful') && (a.name.en||a.name.es||'').toLowerCase().includes('suppress')));
+      const allSuppressed = suppressed.length > 0;
+      return {
+        es: `🔇 ${names}: Hateful ${allSuppressed ? 'SUPRIMIDA por Restraining Muzzle — pueden activarse con normalidad' : 'ACTIVA — deben cargar al enemigo más cercano'}`,
+        en: `🔇 ${names}: Hateful ${allSuppressed ? 'SUPPRESSED by Restraining Muzzle — they activate freely' : 'ACTIVE — must charge the nearest enemy'}`
+      };
+    }
+  },
+  {
+    id: 'demonic',
+    trigger: r => r.filter(_isActive).some(u => _hasKeyword(u,'Demonic')),
+    label: () => ({
+      es: '🔥 Todos los modelos DEMONIC tienen Negate Fire automático',
+      en: '🔥 All DEMONIC models have Negate Fire automatically'
+    })
+  },
+  {
+    id: 'wretched_limit',
+    trigger: r => r.filter(_isActive).some(u => _hasAbility(u,'Law of Hell')),
+    label: () => ({
+      es: '📊 LÍMITE WRETCHED: # de Wretched activos debe ser < # de modelos DEMONIC activos',
+      en: '📊 WRETCHED LIMIT: # active Wretched must be < # active DEMONIC models'
+    })
+  },
+  {
+    id: 'captured',
+    trigger: r => r.filter(u => u.status !== 'dead').some(u => _hasInjury(u,'Captured')),
+    label: r => {
+      const names = r.filter(u => u.status !== 'dead' && _hasInjury(u,'Captured')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🔒 CAPTURADO (${names}): negocia el rescate ANTES del Trauma Step — si no se paga, el modelo muere`,
+        en: `🔒 CAPTURED (${names}): negotiate ransom BEFORE the Trauma Step — if unpaid the model dies`
+      };
+    }
+  },
+  {
+    id: 'grievous_wound',
+    trigger: r => r.filter(u => u.status !== 'dead').some(u => _hasInjury(u,'Grievous Wound')),
+    label: r => {
+      const names = r.filter(u => u.status !== 'dead' && _hasInjury(u,'Grievous Wound')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🩹 GRIEVOUS WOUND (${names}): aplicar penalización de característica según resultado de la tabla`,
+        en: `🩹 GRIEVOUS WOUND (${names}): apply stat penalty per injury table result`
+      };
+    }
+  },
+  {
+    id: 'old_wound',
+    trigger: r => r.filter(u => u.status !== 'dead').some(u => _hasInjury(u,'Old Wound')),
+    label: r => {
+      const names = r.filter(u => u.status !== 'dead' && _hasInjury(u,'Old Wound')).map(u => t(u.name)).join(', ');
+      return {
+        es: `🎲 OLD WOUND (${names}): tira 1D6 al inicio de la partida — con 1-2 el modelo empieza Down`,
+        en: `🎲 OLD WOUND (${names}): roll 1D6 at game start — on 1-2 the model starts the game Down`
+      };
+    }
+  }
+];
+
+function generateChecklist(roster) {
+  const r = (roster||[]).filter(u => u.status !== 'dead');
+  return CHECKLIST_TRIGGERS
+    .filter(trig => trig.trigger(r))
+    .map(trig => ({ id: trig.id, label: trig.label(r) }));
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    TC ID — reads from URL param ?id=XXXX, falls back to TC_ID const
    ═══════════════════════════════════════════════════════════════════ */
 const urlId = new URLSearchParams(window.location.search).get('id');
@@ -692,6 +829,8 @@ function renderHeader() {
   document.getElementById('hdr-tc-link').href = activeTcUrl;
   document.getElementById('tc-id-input').value = activeTcId;
   if (m.tcName) document.getElementById('hdr-name').textContent = m.tcName;
+  const factionEl = document.getElementById('hdr-faction');
+  factionEl.textContent = m.tcFaction || factionEl.dataset.static || '';
   const stash = m.tcStash ?? m.stash;
   const glory = m.tcGlory ?? m.glory;
   document.getElementById('hdr-stats').innerHTML = `
@@ -730,7 +869,8 @@ function renderWarnings() {
    ═══════════════════════════════════════════════════════════════════ */
 function renderChecklist() {
   const body = document.getElementById('checklist-body');
-  body.innerHTML = WARBAND.preGameChecklist.map(item => {
+  const items = generateChecklist(tcRoster || WARBAND.units);
+  body.innerHTML = items.map(item => {
     const checked = state.checklist[item.id] ? 'checked' : '';
     return `<div class="chk-item">
       <input type="checkbox" id="chk_${item.id}" ${checked} onchange="toggleCheck('${item.id}',this.checked)">
@@ -970,7 +1110,10 @@ function resetGame() {
    Overlay: keyed by WARBAND unit id — never mutates WARBAND directly
    ═══════════════════════════════════════════════════════════════════ */
 const TC_API = "https://synod.trench-companion.com/wp-json/synod/v1/multi-dataset";
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const CORS_PROXIES = [
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?url=",
+];
 const tcOverlay = {};
 
 // Compendium data extracted from TC bundle (move in inches, melee/ranged in dice, armour is base)
@@ -985,6 +1128,12 @@ const TC_COMPENDIUM = {
   md_wretched_court:          { move:'6"',     melee:'0',   ranged:'0',   armour:'0',  type:'troop',     keywords:['The Court','Law of Hell'] },
   md_goeticwarlock:           { move:'6"',     melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Demonic','Fear','Artificial','Goetic'] },
   md_sineater:                { move:'6"',     melee:'+2D', ranged:'0',   armour:'0',  type:'mercenary', keywords:['Demonic','Fear','Tough','Strong'] },
+  // Heretic Legion — Knights of Avarice
+  md_hereticpriest_mammonpriest: { move:'6"', melee:'+1D', ranged:'+1D', armour:'-1', type:'elite',     keywords:['Heretic Legion','Knights of Avarice','Leader','Fear'] },
+  md_heretichorister:            { move:'6"', melee:'+1D', ranged:'+2D', armour:'-1', type:'elite',     keywords:['Heretic Legion','Knights of Avarice'] },
+  md_annointedheavyinfantry:     { move:'5"', melee:'+2D', ranged:'+1D', armour:'-3', type:'elite',     keywords:['Heretic Legion','Knights of Avarice','Strong'] },
+  md_heretictrooper:             { move:'6"', melee:'+1D', ranged:'+1D', armour:'0',  type:'troop',     keywords:['Heretic Legion','Knights of Avarice'] },
+  md_warwolfassaultbeast:        { move:'8"', melee:'+2D', ranged:'0',   armour:'-1', type:'troop',     keywords:['Heretic Legion','Fear','Beast'] },
 };
 
 // Static unit ID lookup by TC model type (single-instance models)
@@ -1024,6 +1173,7 @@ function buildUnitFromTc(mo, staticUnit, cmp) {
     type,
     status,
     xp: mo.experience || 0,
+    scars: mo.scar_reserves || 0,
     move:    staticUnit?.move    || cmp?.move    || '?',
     melee:   staticUnit?.melee   || cmp?.melee   || '?',
     ranged:  staticUnit?.ranged  || cmp?.ranged  || '?',
@@ -1057,28 +1207,66 @@ function skillName(id) {
     sk_resilient:'Resilient', sk_berserk:'Berserk', sk_toughness:'Toughness',
     sk_ironwill:'Iron Will', sk_deadshot:'Dead Shot', sk_marksman:'Marksman',
     sk_infiltrator:'Infiltrator', sk_leader:'Leader', sk_tactician:'Tactician',
-    sk_ironjaw:'Iron Jaw', sk_sprint:'Sprint', sk_heavyblow:'Heavy Blow'
+    sk_ironjaw:'Iron Jaw', sk_sprint:'Sprint', sk_heavyblow:'Heavy Blow',
+    sk_friendsinhighplaces:'Friends in High Places', sk_fieldmedic:'Field Medic',
+    sk_flagellant:'Flagellant', sk_viciousstrike:'Vicious Strike',
+    sk_packleader:'Pack Leader', sk_bloodeagle:'Blood Eagle',
+    sk_crusher:'Crusher', sk_feralhunger:'Feral Hunger',
+    sk_tenaciousfighter:'Tenacious Fighter', sk_battlehardened:'Battle Hardened',
+    sk_bullcharge:'Bull Charge', sk_counterattack:'Counter Attack',
+    sk_duelist:'Duelist', sk_executioner:'Executioner',
+    sk_hardtokill:'Hard to Kill', sk_huntinginstinct:'Hunting Instinct',
+    sk_lightningreflexes:'Lightning Reflexes', sk_nightmare:'Nightmare',
+    sk_pitiless:'Pitiless', sk_savagefighter:'Savage Fighter',
+    sk_sixthsense:'Sixth Sense', sk_streetwise:'Streetwise',
+    sk_warscream:'War Scream', sk_xpbonus:'XP Bonus',
   };
-  return map[id] || id.replace(/^sk_/, '').replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase());
+  return map[id] || id.replace(/^sk_/, '').replace(/([A-Z])/g, ' $1')
+    .replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+const FACTION_NAMES = {
+  'fc_courtofthesevenserpent':            'Court of the Seven-Headed Serpent',
+  'fc_hereticlegion':                      'Heretic Legion',
+  'fc_hereticlegion_fv_knightsofavarice': 'Knights of Avarice',
+  'fc_hereticlegion_fv_trenchpilgrims':   'Trench Pilgrims',
+  'fc_newantioch':                         'New Antioch',
+  'fc_blackgrail':                         'Black Grail',
+  'fc_ironsultanate':                      'Iron Sultanate',
+  'fc_cultoftheblackrose':                 'Cult of the Black Rose',
+  'fc_unholyinquisition':                  'Unholy Inquisition',
+};
+
 async function syncFromTC() {
+  const badge = document.getElementById('sync-badge');
+  badge.textContent = '⏳'; badge.style.display = 'inline';
   try {
     const apiUrl = `${TC_API}?warbands=${activeTcId}`;
-    const needsProxy = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    let res;
-    if (!needsProxy) res = await fetch(apiUrl).catch(() => null);
-    if (!res || !res.ok) res = await fetch(CORS_PROXY + encodeURIComponent(apiUrl)).catch(() => null);
-    if (!res || !res.ok) return;
+    // Always try direct first — synod.trench-companion.com is a public WP REST API
+    // with permissive CORS. Only fall back to proxy if direct fetch fails.
+    let res = await fetch(apiUrl).catch(() => null);
+    for (const proxy of CORS_PROXIES) {
+      if (res && res.ok) break;
+      res = await fetch(proxy + encodeURIComponent(apiUrl)).catch(() => null);
+    }
+    if (!res || !res.ok) { badge.textContent = '⚠ Offline'; return; }
+
     const data = await res.json();
     const wbRaw = data.warbands?.[activeTcId]?.warband_data;
-    if (!wbRaw) return;
+    if (!wbRaw) { badge.textContent = '⚠ No data'; return; }
     const wb = typeof wbRaw === 'string' ? JSON.parse(wbRaw) : wbRaw;
 
     // Warband metadata
     if (wb.name) WARBAND.meta.tcName = wb.name;
     WARBAND.meta.tcStash = wb.ducat_bank ?? WARBAND.meta.stash;
     WARBAND.meta.tcGlory = wb.glory_bank ?? WARBAND.meta.glory;
+
+    // Faction name
+    const factionId = wb.faction?.faction_property?.object_id || '';
+    WARBAND.meta.tcFaction = FACTION_NAMES[factionId]
+      || factionId.replace(/^fc_/, '').replace(/_fv_/g, ' — ')
+                  .replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      || '';
 
     // Build TC roster — each model matched to static unit for rich text
     const modelTypeCounts = {};
@@ -1106,10 +1294,13 @@ async function syncFromTC() {
     tcRoster = newRoster;
     renderHeader();
     renderWarnings();
+    renderChecklist();
     renderUnits();
-    document.getElementById('sync-badge').style.display = 'inline';
+    badge.textContent = `⚡ ${newRoster.filter(u => u.status !== 'dead').length} models`;
   } catch(e) {
-    // silent fail — offline or API unavailable
+    console.error('[TC Sync]', e);
+    badge.textContent = '⚠ Error';
+    badge.style.display = 'inline';
   }
 }
 
