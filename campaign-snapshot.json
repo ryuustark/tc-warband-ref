@@ -1,0 +1,157 @@
+{
+  "campaign": {
+    "id": 215135,
+    "name": "lFdM 2026",
+    "round": 3,
+    "threshold": 900,
+    "last_updated": "2026-05-28"
+  },
+  "warbands": [
+    {
+      "id": 183662,
+      "name": "Smoking Lust",
+      "faction": "fc_courtofthesevenheadedserpent",
+      "vp": 23,
+      "models": [
+        { "model": "md_sorcerer",   "name": "Sorcerer",           "active": "active",   "injuries": ["in_darkmemory","in_captured"] },
+        { "model": "md_pitlocust",  "name": "Pit Locust Elite",   "active": "active",   "injuries": ["in_shellshocked"], "elite": true },
+        { "model": "md_hunterofthelefthandpath", "name": "Hunter of the Left-Hand Path", "active": "active", "injuries": [] },
+        { "model": "md_hellknight", "name": "Hell Knight",        "active": "active",   "injuries": [] },
+        { "model": "md_praetor",    "name": "Praetor",            "active": "reserved", "injuries": ["in_minorwound"] },
+        { "model": "md_yokefiend",  "name": "Yoke Fiend",         "active": "active",   "injuries": [], "equipment": ["Restraining Muzzle"] },
+        { "model": "md_yokefiend",  "name": "Yoke Fiend",         "active": "active",   "injuries": [], "equipment": ["Restraining Muzzle"] },
+        { "model": "md_wretched_court", "name": "Wretched",       "active": "active",   "injuries": [] },
+        { "model": "md_wretched_court", "name": "Wretched",       "active": "active",   "injuries": [] },
+        { "model": "md_wretched_court", "name": "Wretched",       "active": "active",   "injuries": [] }
+      ]
+    },
+    {
+      "id": 211332,
+      "name": "Hijos de Astaroth",
+      "faction": "fc_courtofthesevenheadedserpent",
+      "vp": 12,
+      "models": [
+        { "model": "md_praetor",    "name": "Praetor",    "active": "active",  "injuries": [] },
+        { "model": "md_sorcerer",   "name": "Sorcerer",   "active": "active",  "injuries": [] },
+        { "model": "md_hellknight", "name": "Hell Knight","active": "active",  "injuries": [] },
+        { "model": "md_pitlocust",  "name": "Pit Locust", "active": "active",  "injuries": [] },
+        { "model": "md_yokefiend",  "name": "Yoke Fiend", "active": "active",  "injuries": [], "equipment": ["Restraining Muzzle"] },
+        { "model": "md_yokefiend",  "name": "Yoke Fiend", "active": "active",  "injuries": [], "equipment": ["Restraining Muzzle"] },
+        { "model": "md_wretched_court", "name": "Wretched", "active": "active","injuries": [] },
+        { "model": "md_wretched_court", "name": "Wretched", "active": "active","injuries": [] },
+        { "model": "md_wretched_court", "name": "Wretched", "active": "active","injuries": [] }
+      ]
+    },
+    {
+      "id": 184341,
+      "name": "La séptima llama",
+      "faction": "fc_hereticlegion",
+      "vp": 45,
+      "notes": "1 tropa muerta",
+      "models": [
+        { "model": "md_hereticpriest",         "name": "Heretic Priest",           "active": "active", "injuries": [] },
+        { "model": "md_lordoftumors",           "name": "Lord of Tumors",           "active": "active", "injuries": [] },
+        { "model": "md_annointedheavyinfantry", "name": "Anointed Heavy Infantry",  "active": "active", "injuries": [] },
+        { "model": "md_deathcommando",          "name": "Death Commando",           "active": "active", "injuries": [] },
+        { "model": "md_warwolfassaultbeast",    "name": "War Wolf Assault Beast",   "active": "active", "injuries": [] },
+        { "model": "md_sineater",               "name": "Sin Eater (merc)",         "active": "active", "injuries": [] }
+      ]
+    },
+    {
+      "id": 279574,
+      "name": "Cofradía del Útero Negro",
+      "faction": "fc_cultoftheblackgrail",
+      "vp": 40,
+      "notes": "2 Grail Thralls muertos",
+      "models": [
+        { "model": "md_lordoftumors",           "name": "Lord of Tumors",    "active": "active",  "injuries": ["in_chestwound"] },
+        { "model": "md_heraldofbeelzebub",      "name": "Herald of Beelzebub","active": "active", "injuries": [] },
+        { "model": "md_plagueknight",           "name": "Plague Knight",     "active": "active",  "injuries": ["in_bitterlessons"] },
+        { "model": "md_corpseguard",            "name": "Corpse Guard",      "active": "active",  "injuries": ["in_fullrecovery"] },
+        { "model": "md_houndsoftheblackgrail",  "name": "Hounds of the Black Grail", "active": "active", "injuries": [] }
+      ]
+    },
+    {
+      "id": 172761,
+      "name": "Orden de San Lazaro",
+      "faction": "fc_trenchpilgrim_fv_processionofthesacredaffliction",
+      "vp": 29,
+      "notes": "War Prophet DEAD",
+      "models": [
+        { "model": "md_communicant",  "name": "Communicant",   "active": "reserved", "injuries": ["in_minorwound"] },
+        { "model": "md_stigmaticnun", "name": "Stigmatic Nun", "active": "active",   "injuries": [], "upgrades": ["up_infiltrator"] },
+        { "model": "md_trenchcleric", "name": "Trench Cleric", "active": "active",   "injuries": [] },
+        { "model": "md_trenchpilgrim","name": "Trench Pilgrim","active": "active",   "injuries": [] },
+        { "model": "md_trenchpilgrim","name": "Trench Pilgrim","active": "active",   "injuries": [] }
+      ]
+    },
+    {
+      "id": 214779,
+      "name": "Los caídos perdidos",
+      "faction": "fc_newantioch",
+      "vp": 23,
+      "models": [
+        { "model": "md_lieutenant",   "name": "Lieutenant",   "active": "active", "injuries": [] },
+        { "model": "md_sniperpriest", "name": "Sniper Priest","active": "active", "injuries": ["in_paranoid"] },
+        { "model": "md_yeoman",       "name": "Yeoman",       "active": "active", "injuries": [], "upgrades": ["up_infiltrator"] },
+        { "model": "md_yeoman",       "name": "Yeoman",       "active": "active", "injuries": [] },
+        { "model": "md_combatengineer","name": "Combat Engineer","active": "active","injuries": [] }
+      ]
+    },
+    {
+      "id": 168654,
+      "name": "Exactores Mammonis",
+      "faction": "fc_hereticlegion_fv_knightsofavarice",
+      "vp": 21,
+      "models": [
+        { "model": "md_hereticpriest_mammonpriest", "name": "Mammon Priest",          "active": "active", "injuries": [] },
+        { "model": "md_heretichorister",             "name": "Heretic Horister",       "active": "active", "injuries": [] },
+        { "model": "md_annointedheavyinfantry",      "name": "Anointed Heavy Infantry","active": "active", "injuries": [] },
+        { "model": "md_heretictrooper",              "name": "Heretic Trooper",        "active": "active", "injuries": [] },
+        { "model": "md_heretictrooper",              "name": "Heretic Trooper",        "active": "active", "injuries": [] },
+        { "model": "md_goeticwarlock",               "name": "Goetic Warlock (merc)", "active": "active", "injuries": [] }
+      ]
+    },
+    {
+      "id": 176860,
+      "name": "LOS DESQUICIADOS",
+      "faction": "fc_newantioch_fv_redbrigade",
+      "vp": 21,
+      "models": [
+        { "model": "md_lieutenant",   "name": "Lieutenant",   "active": "active", "injuries": [] },
+        { "model": "md_trenchcleric", "name": "Trench Cleric","active": "active", "injuries": ["in_chestwound","in_muscledamage"] },
+        { "model": "md_yeoman",       "name": "Yeoman",       "active": "active", "injuries": [], "upgrades": ["up_infiltrator"] },
+        { "model": "md_shocktrooper", "name": "Shock Trooper","active": "active", "injuries": [] },
+        { "model": "md_shocktrooper", "name": "Shock Trooper","active": "active", "injuries": [] },
+        { "model": "md_trenchdog_attackdog", "name": "Trench Dog", "active": "active", "injuries": [] }
+      ]
+    },
+    {
+      "id": 223915,
+      "name": "Kampfgrouppe Maximilian wolf",
+      "faction": "fc_newantioch_fv_stostruppenofthefreestateofprussia",
+      "vp": 10,
+      "models": [
+        { "model": "md_lieutenant",   "name": "Lieutenant",   "active": "active", "injuries": [] },
+        { "model": "md_trenchcleric", "name": "Trench Cleric","active": "active", "injuries": ["in_darkmemory"] },
+        { "model": "md_shocktrooper", "name": "Shock Trooper","active": "active", "injuries": [] },
+        { "model": "md_shocktrooper", "name": "Shock Trooper","active": "active", "injuries": [] },
+        { "model": "md_shocktrooper", "name": "Shock Trooper","active": "active", "injuries": [] }
+      ]
+    },
+    {
+      "id": 214074,
+      "name": "DI DIFINSORES DI ALLAH",
+      "faction": "fc_ironsultanate",
+      "vp": 7,
+      "notes": "2 Janissaries muertos",
+      "models": [
+        { "model": "md_yuzbasicaptain",    "name": "Yüzbaşı Captain",     "active": "active", "injuries": [] },
+        { "model": "md_jabireanalchemist", "name": "Jabiran Alchemist",   "active": "active", "injuries": ["in_handwound"] },
+        { "model": "md_azeb",              "name": "Azeb",                "active": "active", "injuries": [] },
+        { "model": "md_azeb",              "name": "Azeb",                "active": "active", "injuries": [] },
+        { "model": "md_sultanatesapper",   "name": "Sultanate Sapper",    "active": "active", "injuries": [] }
+      ]
+    }
+  ]
+}
