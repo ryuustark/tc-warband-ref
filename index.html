@@ -1553,7 +1553,9 @@ function buildUnitFromTc(mo) {
     const name = (a.name.en || a.name.es || '').toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
     return 'ab_' + name;
   });
-  const isElite = mo.elite || (cmp?.type === 'elite') || (staticUnit?.type === 'elite');
+  const isElite = mo.elite != null
+    ? Boolean(mo.elite)
+    : (cmp?.type === 'elite') || (staticUnit?.type === 'elite');
 
   const injuries = (mo.list_injury || []).map(inj => {
     const id = inj.object_id;
