@@ -227,6 +227,7 @@ button{font-family:inherit;cursor:pointer}
       </div>
     </div>
     <div class="hdr-ctrl">
+      <button class="btn" id="back-btn" onclick="window.location.href=window.location.pathname" title="Back to warband list">← Lista</button>
       <button class="btn btn-lang" id="lang-btn" onclick="toggleLang()">EN</button>
       <button class="btn" onclick="resetGame()" title="Reset BMs &amp; checklist">↺ Reset</button>
     </div>
@@ -915,8 +916,10 @@ function toggleLang() {
   const label = lang === 'es' ? 'EN' : 'ES';
   const lb = document.getElementById('lang-btn');
   const clb = document.getElementById('camp-lang-btn');
+  const bb = document.getElementById('back-btn');
   if (lb) lb.textContent = label;
   if (clb) clb.textContent = label;
+  if (bb) bb.textContent = lang === 'es' ? '← Lista' : '← List';
   document.documentElement.lang = lang;
 
   // Campaign view — just re-render cards from cached data
