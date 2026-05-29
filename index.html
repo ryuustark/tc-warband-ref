@@ -1195,12 +1195,27 @@ function renderBmCounter(u) {
    ═══════════════════════════════════════════════════════════════════ */
 function renderFaction() {
   const body = document.getElementById('faction-body');
-  body.innerHTML = WARBAND.factionRules.map(r => `
+  let rules = null;
+  if (tcRoster && WARBAND.meta.tcFactionId) {
+    rules = FACTION_RULES[WARBAND.meta.tcFactionId] || null;
+  }
+  if (!rules) rules = WARBAND.factionRules;
+  body.innerHTML = rules.map(r => `
     <div class="abl-card ${r.alert ? 'alert' : ''}">
       <div class="abl-hdr">${r.alert ? '<span>⚠</span>' : ''}<span class="abl-name">${t(r.title)}</span></div>
       <div class="abl-desc">${t(r.body)}</div>
     </div>
   `).join('');
+}
+
+function renderGoeticSection() {
+  const sec = document.getElementById('sec-goetic');
+  if (!sec) return;
+  const roster = tcRoster || WARBAND.units;
+  const hasGoetic = roster.filter(u => u.status !== 'dead').some(u =>
+    _hasKeyword(u,'Goetic') || _hasKwId(u,'kw_goetic')
+  );
+  sec.style.display = hasGoetic ? '' : 'none';
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1374,6 +1389,79 @@ function skillName(id) {
     .replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+const FACTION_RULES = {
+  'fc_courtofthesevenheadedserpent': [
+    { title:{es:'Nobles de la Corte',en:'Nobles of the Court'}, alert:false,
+      body:{es:'La banda debe incluir un Praetor O un Sorcerer como líder. Si eliges Praetor puedes incluir hasta 1 Sorcerer, y viceversa.',en:'The warband must include a Praetor OR a Sorcerer as leader. If Praetor is chosen, up to 1 Sorcerer may be included, and vice versa.'} },
+    { title:{es:'Poderes Goéticos',en:'Goetic Powers'}, alert:false,
+      body:{es:'Los modelos Elite pueden tener Poderes Goéticos. Los Hechizos Goéticos cuestan BM retirados de modelos sin keywords DEMONIC ni BLACK GRAIL (aliados o enemigos, sin distancia ni LoS). Cada hechizo puede lanzarse una vez por Activación del lanzador.',en:'Elite models can have Goetic Powers. Goetic Spells cost BM removed from models without DEMONIC or BLACK GRAIL keywords (friend or foe, no range/LoS limit). Each spell can be cast once per Activation.'} },
+    { title:{es:'Límite de Wretched',en:'Wretched Limit'}, alert:true,
+      body:{es:'Los Wretched activos en el Roster deben ser siempre MENOS que los modelos con keyword DEMONIC activos.',en:'Active Wretched in the Roster must always be FEWER than the number of active DEMONIC models.'} },
+    { title:{es:'Law of Hell',en:'Law of Hell'}, alert:true,
+      body:{es:'Si un Wretched saca fuera de combate a un modelo enemigo con keyword ELITE, el Wretched gana su libertad y es retirado PERMANENTEMENTE del Roster. Nunca dejar que los Wretched den el golpe final a Elites.',en:'If a Wretched takes an enemy Elite OOA, that Wretched is permanently removed from the Roster. Never let Wretched land the killing blow on enemy Elites.'} },
+  ],
+  'fc_hereticlegion': [
+    { title:{es:'Sin reglas de facción separadas',en:'No separate faction rules'}, alert:false,
+      body:{es:'La Heretic Legion no tiene un bloque de Reglas de Facción impreso. Su identidad viene de la composición del Roster (Heretic Priest como líder obligatorio, acceso a War Wolves y Wretched) y las habilidades individuales de los modelos.',en:'The Heretic Legion has no printed Faction Rules block. Its identity comes from roster composition (Heretic Priest mandatory leader, access to War Wolves and Wretched) and individual model abilities.'} },
+  ],
+  'fc_hereticlegion_fv_knightsofavarice': [
+    { title:{es:'Worship Mammon',en:'Worship Mammon'}, alert:false,
+      body:{es:'El Patrón de la banda es siempre Mammon.',en:'The warband Patron is always Mammon.'} },
+    { title:{es:'Price of Greed',en:'Price of Greed'}, alert:false,
+      body:{es:'El Heretic Priest tiene la Action Price of Greed en lugar de Puppet Master.',en:'The Heretic Priest has the Price of Greed Action instead of Puppet Master.'} },
+    { title:{es:"Mammon's Chosen",en:"Mammon's Chosen"}, alert:false,
+      body:{es:'No puede incluirse un modelo cuyo coste total (modelo + equipo) sea inferior a 80 Ducats, salvo los Wretched.',en:'Cannot include a model if total cost (model + Battlekit) is under 80 Ducats, except Wretched.'} },
+    { title:{es:'Preserve the Loot',en:'Preserve the Loot'}, alert:true,
+      body:{es:'Los modelos no pueden tener equipo con keywords FIRE y/o SHRAPNEL. Los Grenade Launchers reemplazan SHRAPNEL por -1 Injury Dice, Gas e Ignore Armour.',en:'Models cannot have Battlekit with FIRE and/or SHRAPNEL keywords. Grenade Launchers replace SHRAPNEL with -1 Injury Dice, Gas and Ignore Armour.'} },
+    { title:{es:'Corrupt Merchants',en:'Corrupt Merchants'}, alert:false,
+      body:{es:'Al crear la banda, puedes comprar 1 pieza del armamento New Antioch y 1 del Iron Sultanate.',en:'When creating the warband, you may purchase 1 item from the New Antioch Armoury and 1 from the Iron Sultanate Armoury.'} },
+  ],
+  'fc_cultoftheblackgrail': [
+    { title:{es:'Infection Markers',en:'Infection Markers'}, alert:true,
+      body:{es:'Algunas armas causan Infection Markers en lugar de Blood Markers. Al Activar un modelo con uno o más Infection Markers, coloca 1 adicional antes de que actúe. Máximo 6 Infection + 6 Blood Markers simultáneos. Las reglas que retiran BM NO retiran Infection Markers.',en:'Some weapons cause Infection Markers instead of Blood Markers. When a model with one or more is Activated, place 1 more before it acts. Max 6 Infection + 6 Blood Markers simultaneously. BM removal rules do NOT remove Infection Markers.'} },
+    { title:{es:'Morale Terror',en:'Morale Terror'}, alert:false,
+      body:{es:'El oponente aplica -1D en todos sus Morale Checks, a menos que su banda sea la Corte de la Serpiente o la propia Cofradía.',en:'The opponent applies -1D to all their Morale Checks, unless their warband is the Court of the Seven-Headed Serpent or the Cult of the Black Grail itself.'} },
+    { title:{es:'The Order of the Fly',en:'The Order of the Fly'}, alert:false,
+      body:{es:'Al crear la banda, elige si estará liderada por un Lord of Tumours o un Plague Knight. Esto determina el número máximo de cada tipo que puedes incluir.',en:'When creating the warband, choose whether it will be led by a Lord of Tumours or a Plague Knight. This determines the maximum number of each you can include.'} },
+  ],
+  'fc_trenchpilgrim_fv_processionofthesacredaffliction': [
+    { title:{es:'Punishing Millstones',en:'Punishing Millstones'}, alert:false,
+      body:{es:'+1 Injury Dice en Melee Attacks si el objetivo está Down. No aplica a Ecclesiastic Prisoners.',en:'+1 Injury Dice on Melee Attacks if the target is Down. Does not apply to Ecclesiastic Prisoners.'} },
+    { title:{es:'Zealot Strength',en:'Zealot Strength'}, alert:false,
+      body:{es:'Hasta 3 Trench Pilgrims y/o Martyr-Penitents pueden tener Zealot Strength (keyword STRONG, base 32mm).',en:'Up to 3 Trench Pilgrims and/or Martyr-Penitents can have Zealot Strength (STRONG keyword, 32mm base).'} },
+    { title:{es:'Melee-Focused',en:'Melee-Focused'}, alert:true,
+      body:{es:'Los modelos no pueden tener Machine Guns. Punt Guns tienen Límite: 1.',en:'Models cannot have Machine Guns. Punt Guns have Limit: 1.'} },
+  ],
+  'fc_newantioch': [
+    { title:{es:'New Antioch Fireteams',en:'New Antioch Fireteams'}, alert:false,
+      body:{es:'La banda puede incluir hasta 2 Fireteams (pares de modelos que se activan simultáneamente, alternando Actions libremente). Concentrated Attack: si ambos miembros golpean al mismo objetivo en la misma Activación conjunta, gasta 3 BM para convertir el Injury Roll del segundo ataque en Bloodbath Roll.',en:'The warband can include up to 2 Fireteams (pairs of models that Activate simultaneously, freely alternating Actions). Concentrated Attack: if both members hit the same target in the same joint Activation, spend 3 BM to convert the second Injury Roll to a Bloodbath Roll.'} },
+  ],
+  'fc_newantioch_fv_redbrigade': [
+    { title:{es:'Wear and Tear',en:'Wear and Tear'}, alert:true,
+      body:{es:'La banda empieza cada partida con 1 BM por cada 200 Ducats del coste total. El oponente distribuye los BM tras el despliegue (no puede dar 2 a un modelo si otros tienen menos de 1).',en:'The warband starts each game with 1 BM per 200 Ducats of total warband cost. The opponent distributes them after deployment (cannot give 2 to a model if others have fewer than 1).'} },
+    { title:{es:'No Retreat',en:'No Retreat'}, alert:true,
+      body:{es:'Los modelos de la Red Brigade no pueden tomar Retreat Action salvo que una regla especial lo obligue.',en:'Red Brigade models cannot take a Retreat Action unless a special rule forces them to do so.'} },
+    { title:{es:'Remember the Fallen',en:'Remember the Fallen'}, alert:false,
+      body:{es:'En la Campaign Phase, puede saltarse los pasos Reinforcement y Exploration para recuperar todo el equipo de modelos caídos en la última batalla (salvo Mercenarios).',en:'In the Campaign Phase, the warband may skip the Reinforcement and Exploration steps to recover all Battlekit from models killed in the last battle (excluding Mercenaries).'} },
+    { title:{es:'New Antioch Fireteams',en:'New Antioch Fireteams'}, alert:false,
+      body:{es:'Hasta 2 Fireteams con Concentrated Attack (gasta 3 BM si ambos miembros golpean al mismo objetivo para convertir el segundo Injury Roll en Bloodbath Roll).',en:'Up to 2 Fireteams with Concentrated Attack (spend 3 BM if both members hit the same target to convert the second Injury Roll to a Bloodbath Roll).'} },
+  ],
+  'fc_newantioch_fv_stostruppenofthefreestateofprussia': [
+    { title:{es:'Masters of the Grenade',en:'Masters of the Grenade'}, alert:false,
+      body:{es:'+4" al Rango de todas las Granadas usadas por modelos Stoßtruppen.',en:'+4" to the Range of all Grenades used by Stoßtruppen models.'} },
+    { title:{es:'Athleticism',en:'Athleticism'}, alert:false,
+      body:{es:'El Lieutenant y los Shock Troopers pueden tener Rapid Assault (+5 Ducats). +1D al Risky Success Roll cuando toman Dash Action.',en:'The Lieutenant and Shock Troopers can have Rapid Assault (+5 Ducats). +1D to the Risky Success Roll when taking a Dash Action.'} },
+    { title:{es:'Forward Positions',en:'Forward Positions'}, alert:false,
+      body:{es:'Hasta 2 Shock Troopers pueden tener el keyword Infiltrator (+10 Ducats). Se despliegan fuera de LoS de enemigos, a 8"+ del modelo enemigo más cercano, tras todos los demás modelos no-Infiltrator.',en:'Up to 2 Shock Troopers can have the Infiltrator keyword (+10 Ducats). They deploy out of enemy LoS, 8"+ from the nearest enemy, after all other non-Infiltrator models.'} },
+    { title:{es:'Expert Fireteams',en:'Expert Fireteams'}, alert:false,
+      body:{es:'La banda puede incluir hasta 3 Fireteams en lugar de los 2 habituales de New Antioch.',en:'The warband can include up to 3 Fireteams instead of the usual 2 of New Antioch.'} },
+  ],
+  'fc_ironsultanate': [
+    { title:{es:'Sin reglas de facción separadas',en:'No separate faction rules'}, alert:false,
+      body:{es:'El Iron Sultanate no tiene un bloque de Reglas de Facción impreso. Su identidad viene de su Roster único (Yüzbaşı, Janissaries, Azeb, Brazen Bull, Lions of Jabir, Alchemist) y su Armería propia.',en:'The Iron Sultanate has no printed Faction Rules block. Its identity comes from its unique roster (Yüzbaşı, Janissaries, Azeb, Brazen Bull, Lions of Jabir, Alchemist) and its distinctive armoury.'} },
+  ],
+};
+
 const CAMPAIGN_WARBANDS = [
   { id: 183662, name: 'Smoking Lust',               faction: 'Court of the Seven-Headed Serpent', vp: 23,
     alerts: ['Sorcerer: Dark Memory + Capturado', 'Praetor: Reserva (Minor Wound)', 'Pit Locust Elite: Shell Shocked 🎲'] },
@@ -1521,7 +1609,11 @@ async function syncFromTC() {
     WARBAND.meta.tcName  = wb.name       || WARBAND.meta.tcName;
     WARBAND.meta.tcStash = wb.ducat_bank ?? wb.ducats ?? WARBAND.meta.stash;
     WARBAND.meta.tcGlory = wb.glory_bank ?? wb.glory  ?? WARBAND.meta.glory;
-    if (wb.faction) WARBAND.meta.tcFaction = FACTION_NAMES[wb.faction] || wb.faction;
+    if (wb.faction) {
+      const factionKey = typeof wb.faction === 'string' ? wb.faction : wb.faction?.en || wb.faction?.es || '';
+      WARBAND.meta.tcFactionId = factionKey;
+      WARBAND.meta.tcFaction = FACTION_NAMES[factionKey] || factionKey;
+    }
 
     const newRoster = (wb.models || []).map(m => buildUnitFromTc(m.model || m));
 
@@ -1531,6 +1623,7 @@ async function syncFromTC() {
     renderChecklist();
     renderUnits();
     renderFaction();
+    renderGoeticSection();
     applyStaticLang();
     hideLoading();
     badge.textContent = `⚡ ${newRoster.filter(u => u.status !== 'dead').length} models`;
@@ -1561,9 +1654,13 @@ function init() {
   } else {
     document.getElementById('detail-view').style.display = 'block';
     const msg = document.getElementById('lo-msg');
-    if (msg) msg.textContent = lang === 'en'
-      ? `Loading warband ${urlId}…`
-      : `Cargando banda ${urlId}…`;
+    if (msg) {
+      const knownWb = CAMPAIGN_WARBANDS.find(w => String(w.id) === String(urlId));
+      const namePart = knownWb ? ` — ${knownWb.name}` : '';
+      msg.textContent = lang === 'en'
+        ? `Loading warband #${urlId}${namePart}…`
+        : `Cargando banda #${urlId}${namePart}…`;
+    }
     syncFromTC();
   }
 }
